@@ -1,4 +1,5 @@
-git commit -m "$1"
+git add -A
+git commit -m "update: $1"
 git push origin HEAD
 cd ..
 git add common-utils
