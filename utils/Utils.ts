@@ -16,6 +16,47 @@ interface ObjectWithText {
 
 export class Utils {
 
+    public static getTimestampOfPreviousTime(hours, minutes) {
+        const now = new Date();
+        const date = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            hours,
+            minutes,
+            0,
+            0
+        );
+        const timestamp = date.getTime();
+        if (timestamp > now.getTime()) {
+            // if the timestamp is in the future, subtract a day
+            return timestamp - 24 * 60 * 60 * 1000;
+        }
+        return timestamp;
+    }
+
+
+    public static formatDate(dateTimeStamp) {
+        if (!dateTimeStamp)
+            return undefined
+        if (typeof (dateTimeStamp) == 'string') {
+            dateTimeStamp = parseInt(dateTimeStamp)
+        }
+        let date = new Date(dateTimeStamp)
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const day = date.getDate().toString().padStart(2, "0");
+        const hours = date.getHours().toString().padStart(2, "0");
+        const minutes = date.getMinutes().toString().padStart(2, "0");
+        const seconds = date.getSeconds().toString().padStart(2, "0");
+        const timezoneOffset = date.getTimezoneOffset();
+        const timezoneOffsetHours = Math.abs(Math.floor(timezoneOffset / 60)).toString().padStart(2, "0");
+        const timezoneOffsetMinutes = (Math.abs(timezoneOffset) % 60).toString().padStart(2, "0");
+        const timezoneOffsetSign = timezoneOffset >= 0 ? "-" : "+";
+        //${timezoneOffsetSign}${timezoneOffsetHours}:${timezoneOffsetMinutes}
+        return `${year}-${month}-${day}+${hours}:${minutes}:${seconds}`;
+    }
+
     public static generateOTPFromKey(secret, digits?, algorithm?, period?, counter?) {
         let totp = new OTPAuth.TOTP({
             issuer: "",
