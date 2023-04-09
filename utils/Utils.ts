@@ -7,12 +7,48 @@ import https from 'https'
 import { exec } from 'child_process';
 import { platform } from 'os';
 import path from 'path';
+import * as OTPAuth from "otpauth";
+import parser from "otpauth-migration-parser";
 
 interface ObjectWithText {
     text: string;
 }
 
 export class Utils {
+
+    public static generateOTPFromKey(secret, digits?, algorithm?, period?, counter?) {
+        let totp = new OTPAuth.TOTP({
+            issuer: "",
+            label: "OTP",
+            algorithm: algorithm || "SHA1",
+            digits: digits || 6,
+            period: period || 30,
+            counter: counter || { low: 0, high: 0, unsigned: false },
+            secret: secret, // or 'OTPAuth.Secret.fromBase32("NB2W45DFOIZA")'
+        });
+
+        let token = totp.generate();
+        return token
+    }
+
+
+    public static async parseOtpExport(dataUri) {
+        const parsedDataList = await parser(dataUri);
+        for (let otpSecretInfo of parsedDataList) {
+            return otpSecretInfo
+            /* =>
+              {
+                secret: 'xxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                name: 'sample',
+                issuer: 'sample',
+                algorithm: 'sha1',
+                digits: 6,
+                type: 'totp',
+                counter: Long { low: 0, high: 0, unsigned: false }
+              }
+            */
+        }
+    }
 
     public static getFieldFromRequest(req: any, fieldname: string): string | undefined {
         let value: string | undefined;
