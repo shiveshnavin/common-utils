@@ -366,6 +366,10 @@ export class Utils {
             setTimeout(resolve, ms)
         })
     }
+    public static async sleepRandom(min, max) {
+        const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+        return new Promise(resolve => setTimeout(resolve, delay));
+    }
     public static saveBase64Image(base64Image, fileName) {
         // remove the "data:image/jpeg;base64," header from the base64 string
         const base64Data = base64Image.replace(/^data:image\/jpeg;base64,/, '');
