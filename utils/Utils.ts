@@ -16,7 +16,7 @@ interface ObjectWithText {
 
 export class Utils {
 
-    public static generateAlphanumericString(length = 10) {
+    public static generateRandomID(length = 10) {
         const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = '';
 
