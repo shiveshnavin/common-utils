@@ -47,6 +47,19 @@ export class Utils {
         return timestamp;
     }
 
+    public static getConfig(file = "config.json") {
+        if (fs.existsSync(file)) {
+            try {
+                let jstr = fs.readFileSync(file).toString()
+                return JSON.parse(jstr)
+            } catch (e) {
+                return {}
+            }
+        }
+        else {
+            return undefined;
+        }
+    }
 
     public static formatDate(dateTimeStamp) {
         if (!dateTimeStamp)
