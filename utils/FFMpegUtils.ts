@@ -4,7 +4,7 @@ import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg';
 import { spawn } from 'child_process';
 import { parseArgsStringToArgv } from 'string-argv';
 
-function runSpawn(cmd: String, onLog?: Function) {
+function execute(cmd: String, onLog?: Function) {
     if (!onLog)
         onLog = console.log
     cmd = cmd.replace('ffmpeg', "")
@@ -31,7 +31,24 @@ function runSpawn(cmd: String, onLog?: Function) {
         })
     })
 }
-runSpawn('-version', console.log)
-const ffmpegExecute = runSpawn;
-export default ffmpegExecute
+
+
+async function joinAudios(filePaths, outputFileName) {
+    if (!Array.isArray(filePaths) || filePaths.length < 2) {
+        throw new Error("You need at least two audio files to concatenate.");
+    }
+
+    const inputFiles = filePaths.map((filePath) => `-i "${filePath}"`).join(" ");
+    const filterComplex = filePaths.map((_, index) => `[${index}:a]`).join("") + `concat=n=${filePaths.length}:v=0:a=1[out]`;
+
+    const ffmpegCommand = `ffmpeg ${inputFiles} -filter_complex "${filterComplex}" -map "[out]" "${outputFileName}"`;
+    return await execute(ffmpegCommand);
+}
+
+// joinAudios(['../../public/test/1.mp3', '../../public/test/2.mp3', '../../public/test/3.mp3'], '../../public/test/op.mp3')
+const FFMpegUtils = {
+    execute,
+    joinAudios
+};
+export default FFMpegUtils
 
