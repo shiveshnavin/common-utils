@@ -16,6 +16,11 @@ interface ObjectWithText {
 
 export class Utils {
 
+
+    public static replaceAll = function (source, search, replacement) {
+        return source.split(search).join(replacement);
+    };
+
     public static generateRandomID(length = 10) {
         const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = '';
