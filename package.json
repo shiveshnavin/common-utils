@@ -29,6 +29,7 @@
     "otpauth": "^9.1.1",
     "otpauth-migration-parser": "^0.1.1",
     "pipelane": "^2.0.3",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "unzipper": "^0.10.14"
   }
 }

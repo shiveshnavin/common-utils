@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import archiver from 'archiver';
+import unzipper from 'unzipper';
 
 function getClosestCommonRoot(files: string[]): string {
     if (files.length === 0) {
@@ -65,4 +66,21 @@ function ZipFiles(filesToExport: string[], outputPath: string): Promise<number> 
     return promise
 }
 
+export async function UnzipFiles(filePath, targetDir) {
+    try {
+        // Ensure that the targetDir exists before unzipping
+        if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+        }
+
+        // Open the zip file and extract its contents to the targetDir
+        await fs.createReadStream(filePath)
+            .pipe(unzipper.Extract({ path: targetDir }))
+            .promise();
+
+        console.log('Files extracted successfully.');
+    } catch (error) {
+        console.error('Error occurred during the unzip process:', error);
+    }
+}
 export default ZipFiles;

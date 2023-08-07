@@ -178,31 +178,7 @@ export class Utils {
         return result;
     }
 
-
     public static downloadFile(url, fullOutFilePath, isOverwrite = false): any {
-        if (existsSync(fullOutFilePath) && !isOverwrite) {
-            console.log('Skipping Download of exisiting file')
-            return
-        }
-        const fileName = path.basename(fullOutFilePath);
-        const dirName = path.dirname(fullOutFilePath);
-        if (isOverwrite && existsSync(fullOutFilePath))
-            unlinkSync(fullOutFilePath)
-
-        console.log('downloading ', url, 'to file', fullOutFilePath)
-        axios({
-            url,
-            method: 'GET',
-            responseType: 'stream'
-        }).then(response => {
-            if (existsSync(fullOutFilePath))
-                return
-            const writer = fs.createWriteStream(fullOutFilePath);
-            response.data.pipe(writer);
-        });
-    }
-
-    public static _downloadFile(url, fullOutFilePath, isOverwrite = false): any {
         if (existsSync(fullOutFilePath) && !isOverwrite) {
             console.log('Skipping Download of exisiting file')
             return
