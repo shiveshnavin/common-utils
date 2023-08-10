@@ -25,7 +25,7 @@ function getClosestCommonRoot(files: string[]): string {
     return commonRoot;
 }
 
-function ZipFiles(filesToExport: string[], outputPath: string): Promise<number> {
+export function ZipFiles(filesToExport: string[], outputPath: string): Promise<number> {
     const outputDir = path.dirname(outputPath);
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
@@ -84,4 +84,3 @@ export async function UnzipFiles(filePath, targetDir) {
         console.error('Error occurred during the unzip process:', error);
     }
 }
-export default ZipFiles;
