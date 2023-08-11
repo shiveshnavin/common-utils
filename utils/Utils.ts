@@ -17,6 +17,25 @@ interface ObjectWithText {
 export class Utils {
 
 
+    public static clearFolder(folderPath: string, exclusions?: string[]) {
+
+        const foldersToPreserve = exclusions || [];
+        let cacheDirPath = folderPath
+        fs.readdirSync(cacheDirPath).forEach(file => {
+
+            const filePath = path.join(cacheDirPath, file);
+            if (fs.statSync(filePath).isDirectory()) {
+                if (!foldersToPreserve.includes(file)) {
+                    fs.rmdirSync(filePath, { recursive: true });
+                }
+            } else {
+                if (!foldersToPreserve.includes(file))
+                    fs.unlinkSync(filePath);
+            }
+
+        });
+    }
+
     public static replaceAll = function (source, search, replacement) {
         return source.split(search).join(replacement);
     };
@@ -335,7 +354,6 @@ export class Utils {
     public static decodeBase64(base64: string): string {
         return Buffer.from(base64, 'base64').toString('utf8');
     }
-
 
     public static encodeBase64(normalString: string): string {
         return Buffer.from(normalString).toString("base64");
