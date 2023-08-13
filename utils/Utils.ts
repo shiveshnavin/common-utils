@@ -18,7 +18,9 @@ export class Utils {
 
 
     public static clearFolder(folderPath: string, exclusions?: string[]) {
-
+        if (!fs.existsSync(folderPath)) {
+            return
+        }
         const foldersToPreserve = exclusions || [];
         let cacheDirPath = folderPath
         fs.readdirSync(cacheDirPath).forEach(file => {
