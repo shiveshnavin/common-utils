@@ -2,6 +2,25 @@
 # yarn lockfile v1
 
 
+"@ffprobe-installer/ffprobe@^2.1.1":
+  "integrity" "sha512-v4nAFp70Gv7yyEvjvlGTOrYn1atjFi6Z9vpGpGvWAiCXL6vnL88gBeIyJ4hY01G/XOw1LVuq1vjUM3gQzxMmIA=="
+  "resolved" "https://registry.npmjs.org/@ffprobe-installer/ffprobe/-/ffprobe-2.1.1.tgz"
+  "version" "2.1.1"
+  optionalDependencies:
+    "@ffprobe-installer/darwin-arm64" "5.0.1"
+    "@ffprobe-installer/darwin-x64" "5.1.0"
+    "@ffprobe-installer/linux-arm" "5.1.0"
+    "@ffprobe-installer/linux-arm64" "5.1.0"
+    "@ffprobe-installer/linux-ia32" "5.1.0"
+    "@ffprobe-installer/linux-x64" "5.1.0"
+    "@ffprobe-installer/win32-ia32" "5.1.0"
+    "@ffprobe-installer/win32-x64" "5.1.0"
+
+"@ffprobe-installer/win32-x64@5.1.0":
+  "integrity" "sha512-jMGYeAgkrdn4e2vvYt/qakgHRE3CPju4bn5TmdPfoAm1BlX1mY9cyMd8gf5vSzI8gH8Zq5WQAyAkmekX/8TSTg=="
+  "resolved" "https://registry.npmjs.org/@ffprobe-installer/win32-x64/-/win32-x64-5.1.0.tgz"
+  "version" "5.1.0"
+
 "@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
   "integrity" "sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ=="
   "resolved" "https://registry.npmjs.org/@protobufjs/aspromise/-/aspromise-1.1.2.tgz"
