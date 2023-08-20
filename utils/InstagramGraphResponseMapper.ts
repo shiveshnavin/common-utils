@@ -1,8 +1,32 @@
 
-// import Source from './source.json'
+import Source from './source.json'
 // import Target from './target.json'
 
 export class InstagramGraphResponseMapper {
+
+    public static mapGraphResponseToUser(
+        // Source: any
+    ) {
+
+        let Target: any = {
+            pk: Source.id,
+            username: Source.username,
+            full_name: Source.full_name,
+            is_private: Source.is_private,
+            profile_pic_url: Source.profile_pic_url,
+            is_business: Source.is_business_account
+        }
+        Object.assign(Target, Source)
+        Target.media_count = Source.edge_owner_to_timeline_media?.count
+        Target.following_count = Source.edge_follow.count
+        Target.follower_count = Source.edge_followed_by.count
+        Target.account_type
+        Target.hd_profile_pic_url_info = {
+            url: Source.profile_pic_url_hd
+        }
+
+        return Target
+    }
 
     public static mapGraphResponseToMedia(
         Source: any
