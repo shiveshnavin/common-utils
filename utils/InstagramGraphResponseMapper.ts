@@ -1,11 +1,11 @@
 
-import Source from './source.json'
+// import Source from './source.json'
 // import Target from './target.json'
 
 export class InstagramGraphResponseMapper {
 
     public static mapGraphResponseToUser(
-        // Source: any
+        Source: any
     ) {
 
         let Target: any = {
