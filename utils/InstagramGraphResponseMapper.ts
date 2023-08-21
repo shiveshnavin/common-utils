@@ -1,4 +1,4 @@
-
+//@ts-nocheck
 // import Source from './source.json'
 // import Target from './target.json'
 
