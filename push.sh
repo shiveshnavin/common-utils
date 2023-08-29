@@ -1,4 +1,3 @@
-git checkout main
 git pull origin main
 git add -A
 git commit -m "update: $1"
