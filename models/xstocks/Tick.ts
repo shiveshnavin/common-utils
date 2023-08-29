@@ -35,4 +35,8 @@ export class Tick {
         delete copy.stockData
         return copy;
     }
+
+    toString() {
+        return `${new Date(this.datetime).getHours()}:${new Date(this.datetime).getMinutes()}:${new Date(this.datetime).getSeconds()} ${this.symbol} ${this.close} ${this.open > this.close ? '-' : '+'} ${Math.abs(this.close - this.open)}`
+    }
 }
