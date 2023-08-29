@@ -5,21 +5,26 @@ export class Tick {
     high;
     low;
     open;
+    depth: {
+        buy: [{ quantity: number, price: number, orders: number }],
+        sell: [{ quantity: number, price: number, orders: number }]
+    };
     close;
     volume;
     oi;
     last_price;
 
     constructor(body: any) {
-        this.symbol = body.symbol;
-        this.datetime = body.datetime;
-        this.high = parseFloat(body.high);
-        this.low = parseFloat(body.low);
-        this.open = parseFloat(body.open);
-        this.close = parseFloat(body.close);
-        this.volume = parseFloat(body.volume);
+        this.symbol = body.symbol || body.tradingsymbol;
+        this.datetime = body.datetime || new Date(body.exchange_timestamp);
+        this.high = parseFloat(body.high || body.ohlc.high);
+        this.low = parseFloat(body.low || body.ohlc.low);
+        this.open = parseFloat(body.open || body.ohlc.open);
+        this.close = parseFloat(body.close || body.ohlc.closea);
+        this.volume = parseFloat(body.volume || body.volume_traded);
+        this.depth = body.depth
         this.oi = parseFloat(body.oi);
-        this.last_price = parseFloat(body.last_price || body.close)
+        this.last_price = parseFloat(body.last_price || body.close || body.ohlc.close);
         this.stockData = body.stockData;
     }
 
