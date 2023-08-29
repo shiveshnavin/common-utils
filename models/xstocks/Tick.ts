@@ -20,7 +20,7 @@ export class Tick {
         this.high = parseFloat(body.high || body.ohlc.high);
         this.low = parseFloat(body.low || body.ohlc.low);
         this.open = parseFloat(body.open || body.ohlc.open);
-        this.close = parseFloat(body.close || body.ohlc.closea);
+        this.close = parseFloat(body.close || body.ohlc.close);
         this.volume = parseFloat(body.volume || body.volume_traded);
         this.depth = body.depth
         this.oi = parseFloat(body.oi);
