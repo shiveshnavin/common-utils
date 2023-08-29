@@ -5,6 +5,7 @@ export class Tick {
     high;
     low;
     open;
+    change;
     depth: {
         buy: [{ quantity: number, price: number, orders: number }],
         sell: [{ quantity: number, price: number, orders: number }]
@@ -25,6 +26,7 @@ export class Tick {
         this.depth = body.depth
         this.oi = parseFloat(body.oi);
         this.last_price = parseFloat(body.last_price || body.close || body.ohlc.close);
+        this.change = parseFloat(body.change)
         this.stockData = body.stockData;
     }
 
