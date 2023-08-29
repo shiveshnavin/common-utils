@@ -39,6 +39,6 @@ export class Tick {
     }
 
     toString() {
-        return `${new Date(this.datetime).getHours()}:${new Date(this.datetime).getMinutes()}:${new Date(this.datetime).getSeconds()} ${this.symbol} ${this.close} (${this.open > this.close ? '-' : '+'}${Math.round(Math.abs(this.close - this.open) * 100) / 100})`
+        return `${new Date(this.datetime).getHours()}:${new Date(this.datetime).getMinutes()}:${new Date(this.datetime).getSeconds()} ${this.symbol} ${this.close} (${this.open > this.close ? '-' : '+'}${Math.round(Math.abs(this.change) * 100) / 100})`
     }
 }
