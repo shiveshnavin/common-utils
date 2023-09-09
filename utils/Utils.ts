@@ -16,6 +16,26 @@ interface ObjectWithText {
 
 export class Utils {
 
+    public static getHighestResMedia(mediaArray: { w, h }) {
+
+        let largestResolutionPhoto = null;
+        let largestResolution = 0;
+
+        for (const media of mediaArray) {
+            if (media.width) media.w = media.width
+            if (media.height) media.h = media.height
+            if (!media.w || !media.h) {
+                continue
+            }
+            const resolution = media.w * media.h;
+            if (resolution > largestResolution) {
+                largestResolution = resolution;
+                largestResolutionPhoto = media;
+            }
+        }
+
+        return largestResolutionPhoto
+    }
 
     public static clearFolder(folderPath: string, exclusions?: string[]) {
         if (!fs.existsSync(folderPath)) {

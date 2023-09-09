@@ -18,6 +18,17 @@ export class FileUploader {
     this.creds = creds
   }
 
+  async uploadBytes(fileData, filePath) {
+    const oracleAPI = this.creds.url
+
+    const uploadUrl = oracleAPI + encodeURIComponent(filePath);
+    await axios.put(uploadUrl, fileData);
+    return {
+      url: uploadUrl
+    }
+  }
+
+
   async upload(filePath: string) {
 
     const oracleAPI = this.creds.url
