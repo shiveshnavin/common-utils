@@ -9,6 +9,8 @@ import { platform } from 'os';
 import path from 'path';
 import * as OTPAuth from "otpauth";
 import parser from "otpauth-migration-parser";
+import moment from 'moment-timezone'
+const istTime = moment().tz('Asia/Kolkata');
 
 interface ObjectWithText {
     text: string;
@@ -21,7 +23,9 @@ export class Utils {
         if (req && req.header('x-correlation-id')) {
             corrid = req.header('x-correlation-id');
         }
-        console.log(`(corrid=${corrid}) `, ...params)
+        const formattedTime = istTime.format('M/DD/YY, h:mm:ss:SSS A');
+
+        console.log(`(corrid=${corrid}) (time=${formattedTime}) `, ...params)
     }
 
     public static getHighestResMedia(mediaArray: { w, h }) {
