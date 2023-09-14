@@ -16,6 +16,14 @@ interface ObjectWithText {
 
 export class Utils {
 
+    public static log(req, ...params) {
+        let corrid = '-'
+        if (req && req.header('x-correlation-id')) {
+            corrid = req.header('x-correlation-id');
+        }
+        console.log(`(corrid=${corrid}) `, ...params)
+    }
+
     public static getHighestResMedia(mediaArray: { w, h }) {
 
         let largestResolutionPhoto = null;
