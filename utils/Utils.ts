@@ -393,13 +393,19 @@ export class Utils {
         return Buffer.from(normalString).toString("base64");
     }
 
-    public static getAxios(): Axios {
+    public static getAxios({ headers }): Axios {
         const axiosClient = axios.create({
             httpsAgent: new https.Agent({
                 keepAlive: true,
                 rejectUnauthorized: false
             })
         })
+        if (headers) {
+            axiosClient.interceptors.request.use(function (config) {
+                Object.assign(config.headers, headers);
+                return config;
+            });
+        }
         axiosClient.defaults.validateStatus = function () {
             return true;
         };
