@@ -18,39 +18,48 @@ interface ObjectWithText {
 
 export class Utils {
 
-    public static findObjDiff(objectOld,objectNew)  {
+    public static findObjDiff(objectOld, objectNew) {
         return (function deepObjectDiff(obj1, obj2) {
-          const diff = {};
-        
-          for (const key in obj1) {
-            if (typeof obj1[key] === 'object' && obj1[key] !== null && typeof obj2[key] === 'object' && obj2[key] !== null) {
-              const nestedDiff = deepObjectDiff(obj1[key], obj2[key]);
-              if (Object.keys(nestedDiff).length > 0) {
-                diff[key] = nestedDiff;
-              }
-            } else if (obj1[key] !== obj2[key]) {
-              diff[key] = {
-                oldValue: obj1[key],
-                newValue: obj2[key]
-              };
+            const diff = {};
+
+            for (const key in obj1) {
+                if (typeof obj1[key] === 'object' && obj1[key] !== null && typeof obj2[key] === 'object' && obj2[key] !== null) {
+                    const nestedDiff = deepObjectDiff(obj1[key], obj2[key]);
+                    if (Object.keys(nestedDiff).length > 0) {
+                        diff[key] = nestedDiff;
+                    }
+                } else if (obj1[key] !== obj2[key]) {
+                    diff[key] = {
+                        oldValue: obj1[key],
+                        newValue: obj2[key]
+                    };
+                }
             }
-          }
-          for (const key in obj2) {
-            if (!(key in obj1)) {
-              diff[key] = {
-                oldValue: undefined,
-                newValue: obj2[key]
-              };
+            for (const key in obj2) {
+                if (!(key in obj1)) {
+                    diff[key] = {
+                        oldValue: undefined,
+                        newValue: obj2[key]
+                    };
+                }
             }
-          }
-          return diff;
-        })(objectOld,objectNew) 
+            return diff;
+        })(objectOld, objectNew)
+    }
+
+    public static logPlain(...params) {
+        Utils.log({}, ...params)
     }
 
     public static log(req, ...params) {
         let corrid = '-'
         if (req && req.header('x-correlation-id')) {
             corrid = req.header('x-correlation-id');
+        }
+        else if (req && req['corrid']) {
+            corrid = req['corrid'];
+        } else if (typeof req == 'string') {
+            corrid = req
         }
         const formattedTime = istTime.format('M/DD/YY, h:mm:ss:SSS A');
 
