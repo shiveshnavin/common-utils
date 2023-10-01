@@ -3,6 +3,7 @@ import { GenerationConfig } from "./GenerationConfig";
 export interface OriginalManuscript {
     id: string;
     bgMusic: string
+    bgMusicDuration: number
     status: boolean
     transcriptText: string
     transcript: Transcript[]
@@ -21,24 +22,42 @@ export interface Transcript {
     title: string
     text: string
     pointers: string[]
+    subtitle_file: string
     imageText: string[]
     videoText: string[]
     dialog: string[]
     imageAbsPathsOriginal: SectionMedia[]
     index: number
+    transition_type: 'graphical' | 'geometrial'
     transition_file: string
     transition_duration_sec: number
     status: boolean
     imageAbsPaths: SectionMedia[]
     audioFullPath: string
     durationInSeconds: number
-    duration: number
-    offset: number
+    duration: number // duration in frames 
+    offset: number // offset in frames
     bubble: {
         image?: string
         text: string
         type: string
     }
+}
+
+
+export interface Speaker {
+    wps: number
+}
+
+export interface TenantVideoConfig {
+    introFile: string
+    outroFile: string
+}
+
+export interface SectionMedia {
+    path: string
+    durationSec?: number
+    type: 'image' | 'video'
 }
 
 export interface Meta {
