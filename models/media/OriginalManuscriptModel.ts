@@ -1,4 +1,4 @@
-import { GenerationConfig } from "../../../videogenerator";
+import { GenerationConfig } from "./GenerationConfig";
 
 export interface OriginalManuscript {
     id: string;
