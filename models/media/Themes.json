@@ -1,0 +1,14 @@
+{
+  "motivational": {
+    "name": "motivational"
+  },
+  "happy": {
+    "name": "happy"
+  },
+  "excited": {
+    "name": "excited"
+  },
+  "sad": {
+    "name": "sad"
+  }
+}
