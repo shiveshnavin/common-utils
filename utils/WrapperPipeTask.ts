@@ -7,7 +7,7 @@ export class WrapperPipeTask extends PipeTask<any, any>{
     onExecute;
     onKillCmd;
 
-    public static of(taskName, onExecute): WrapperPipeTask {
+    public static of(taskName, onExecute): WrapperPipeTask<InputWithPreviousInputs, OutputWithStatus> {
         return new WrapperPipeTask(taskName, onExecute);
     }
 
@@ -29,6 +29,9 @@ export class WrapperPipeTask extends PipeTask<any, any>{
         return this.onExecute(pipeWorkInstance, inputs, (onKill) => {
             that.onKillCmd = onKill
         })
+    }
+    async getLoad() {
+        return 0
     }
 
 }

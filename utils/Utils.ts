@@ -18,6 +18,14 @@ interface ObjectWithText {
 
 export class Utils {
 
+    public static async getDynamicConfig(app) {
+        // move to common-libs
+        return {
+            "skip_chatgpt_preflight": true,
+            "script_mode": 'section' //text | section
+        }
+    }
+
     public static findObjDiff(objectOld, objectNew) {
         return (function deepObjectDiff(obj1, obj2) {
             const diff = {};
