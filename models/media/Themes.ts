@@ -1,4 +1,4 @@
-{
+export default {
   "motivational": {
     "name": "motivational"
   },
@@ -8,7 +8,7 @@
   "excited": {
     "name": "excited"
   },
-  "sad": {
-    "name": "sad"
+  "travel": {
+    "name": "travel"
   }
 }
