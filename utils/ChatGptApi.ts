@@ -23,30 +23,35 @@ export class ChatGptApi {
         retries?: number,
         axios?: Axios) {
         this.endpoint = endpoint
-        this.conversationId = convoId || 'new'
+        this.conversationId = convoId
         this.retries = retries || 0
         this.axios = axios || Utils.getAxios()
     }
 
-    async getChat(convoId?: string): Promise<boolean> {
+    async getChat(convoId?: string): Promise<any> {
         try {
             if (!convoId) {
                 convoId = this.conversationId
             }
+            if (!convoId) {
+                return false
+            }
             let chat = await this.axios.get(`${this.endpoint}/chat/${convoId}`)
             if (chat.status == 200) {
-                return true
+                return chat.data
             }
         } catch (e) {
             Utils.logPlain('Error reading chat', convoId)
         }
         return false
-
     }
 
     async query(prompt: string): Promise<ChatGptResponse | undefined> {
 
         let retryCountLeft = this.retries
+        if (!this.conversationId) {
+            this.conversationId = 'new'
+        }
         do {
             try {
 
@@ -70,7 +75,7 @@ export class ChatGptApi {
                 }
 
                 Utils.logPlain('Response from ChatGPT took', perfRecorder.elapsedSeconds(), 'seconds:', cdata.response)
-
+                this.conversationId = cdata.conversationId
                 return cdata;
             } catch (e) {
                 retryCountLeft--
@@ -94,7 +99,18 @@ export class ChatGptApi {
     static extractJson(resp: ChatGptResponse) {
         let mds = Utils.extractCodeFromMarkdown(resp.response)
         if (mds?.length > 0) {
-            return mds[0]
+            let jstr = mds[0]
+            try {
+                return JSON.parse(jstr)
+            } catch (e: any) {
+                Utils.logPlain('Unrecoverable Error parsing json from markdown', e.message)
+            }
+        } else {
+            try {
+                return JSON.parse(resp.response)
+            } catch (e: any) {
+                Utils.logPlain('Unrecoverable Error parsing json from plain text', e.message)
+            }
         }
         return undefined
     }
