@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { GenerationConfig } from "./GenerationConfig";
 
 export interface OriginalManuscript {
@@ -18,7 +19,7 @@ export interface SectionMedia {
     type: 'image' | 'video'
 }
 
-export interface Transcript {
+export class Transcript {
     title: string
     text: string
     pointers: string[]

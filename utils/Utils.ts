@@ -10,6 +10,7 @@ import path from 'path';
 import * as OTPAuth from "otpauth";
 import parser from "otpauth-migration-parser";
 import moment from 'moment-timezone'
+import crypto from 'crypto'
 const istTime = moment().tz('Asia/Kolkata');
 
 interface ObjectWithText {
@@ -18,12 +19,47 @@ interface ObjectWithText {
 
 export class Utils {
 
-    public static async getDynamicConfig(app) {
-        // move to common-libs
-        return {
-            "skip_chatgpt_preflight": true,
-            "script_mode": 'section' //text | section
+    public static assert(actual, expected, msg?) {
+        let bool = actual == expected
+        let err = `Assertion Error.${msg || ''} Expected {${expected}} but found {${actual}}`
+        if (!bool) throw new Error(err)
+    }
+
+    public static generateHash(inputString, desiredLength = 10) {
+        const hash = crypto.createHash('sha256').update(inputString).digest('hex');
+        if (desiredLength >= hash.length) {
+            return hash;
+        } else {
+            return hash.substring(0, desiredLength);
         }
+    }
+
+    public static async getKeyAsync(key) {
+        let file = 'config.json'
+        if (!fs.existsSync(file)) {
+            return false
+        }
+        let prefs = JSON.parse(fs.readFileSync(file).toString())
+        return prefs[key]
+    }
+
+    public static async setKeyAsync(key, value) {
+        let file = 'config.json'
+        if (!fs.existsSync(file)) {
+            return false
+        }
+        let prefs = JSON.parse(fs.readFileSync(file).toString())
+        prefs[key] = value
+        fs.writeFileSync(file, JSON.stringify(prefs, undefined, 2))
+    }
+
+    public static async getDynamicConfig(app) {
+        let file = 'config.json'
+        if (!fs.existsSync(file)) {
+            return false
+        }
+        let prefs = JSON.parse(fs.readFileSync(file).toString())
+        return prefs
     }
 
     public static findObjDiff(objectOld, objectNew) {
@@ -56,7 +92,7 @@ export class Utils {
     }
 
     public static logPlain(...params) {
-        Utils.log({}, ...params)
+        Utils.log(undefined, ...params)
     }
 
     public static log(req, ...params) {
@@ -263,7 +299,11 @@ export class Utils {
         let regex = /```(.+?)```/gs;
         let match;
         while (match = regex.exec(markdown)) {
-            codeBlocks.push(match[1]);
+            let group = match[1]
+            if (group.startsWith("json")) {
+                group = group.replace("json", "")
+            }
+            codeBlocks.push(group);
         }
         return codeBlocks;
     }
@@ -439,7 +479,8 @@ export class Utils {
         return Buffer.from(normalString).toString("base64");
     }
 
-    public static getAxios({ headers }): Axios {
+    public static getAxios(globalConfig?= {}): Axios {
+        let { headers } = globalConfig
         const axiosClient = axios.create({
             httpsAgent: new https.Agent({
                 keepAlive: true,
