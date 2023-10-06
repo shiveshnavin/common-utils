@@ -19,6 +19,13 @@ interface ObjectWithText {
 
 export class Utils {
 
+    public static async forEachAsync<T>(array: T[], func: (item: T, idx?: number, array?: T[]) => Promise<void>) {
+        for (let i = 0; i < array.length; i++) {
+            const item = array[i];
+            await func(item, i, array)
+        }
+    }
+
     public static assert(actual, expected, msg?) {
         let bool = actual == expected
         let err = `Assertion Error.${msg || ''} Expected {${expected}} but found {${actual}}`
