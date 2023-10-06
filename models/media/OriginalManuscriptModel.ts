@@ -22,7 +22,6 @@ export interface Transcript {
     title: string
     text: string
     pointers: string[]
-    subtitle_file: string
     imageText: string[]
     videoText: string[]
     dialog: string[]
@@ -34,6 +33,7 @@ export interface Transcript {
     status: boolean
     imageAbsPaths: SectionMedia[]
     audioFullPath: string
+    audioCaptionFile: string
     durationInSeconds: number
     duration: number // duration in frames 
     offset: number // offset in frames
