@@ -59,6 +59,7 @@ export interface SectionMedia {
     path: string
     durationSec?: number
     type: 'image' | 'video'
+    dimenstions?: { width: number, height: number }
 }
 
 export interface Meta {
@@ -92,6 +93,7 @@ export interface Meta {
         platform: string
         playlistId: string
         userId: string
+        bgMusicMetadata?: any
     }
     schedule: {
         id: string
@@ -102,6 +104,22 @@ export interface Meta {
         status: string,
         id: string
     }
+    resolution: {
+        width: number
+        height: number
+    }
+}
+
+
+export interface BgMusicInfo {
+    id: string
+    theme: string
+    platform: string
+    source: 'local' | 'url'
+    durationSec: number
+    file: string
+    url: string
+    meta: string // json string
 }
 
 export interface Speaker {
