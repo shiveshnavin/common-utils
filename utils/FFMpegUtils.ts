@@ -63,11 +63,67 @@ async function getDuration(pathOfAudio): Promise<number> {
     return durationInSeconds
 }
 
+
+function getMediaMetadata(pathToMedia): Promise<{
+    size,
+    durationSec,
+    bit_rate,
+    audio: {
+        duration,
+        bit_rate,
+        codec_name
+    }
+    video: {
+        duration,
+        height,
+        width,
+        codec_name,
+        display_aspect_ratio,
+        fps
+    }
+}> {
+
+    return new Promise((resolve, reject) => {
+        ffmpeg.ffprobe(pathToMedia, (err, metadata) => {
+            if (err) {
+                reject(err)
+            }
+            const meta = metadata?.format
+            if (!meta) {
+                reject('Didnt get any response from ffprobe: ' + JSON.stringify(metadata))
+            }
+            let videoStream;
+            let audioStream;
+            let streams = metadata?.streams
+            streams?.forEach(stream => {
+                if (stream.codec_type == 'audio') {
+                    audioStream = stream
+                } else if (stream.codec_type == 'video') {
+                    videoStream = stream
+                }
+            });
+            if (audioStream)
+                meta.audio = audioStream
+            if (videoStream) {
+                meta.video = videoStream
+                if (videoStream.avg_frame_rate) {
+                    meta.video.fps = videoStream.avg_frame_rate.split("/")[0]
+                }
+            }
+            resolve(meta)
+        });
+    })
+
+}
+
+// getMediaMetadata('D:\\code\\node_projects\\semibitmedia\\out\\output_6e59f8dcc9.mp4')
+
 // joinAudios(['../../public/test/1.mp3', '../../public/test/2.mp3', '../../public/test/3.mp3'], '../../public/test/op.mp3')
 const FFMpegUtils = {
     execute,
     joinAudios,
-    getDuration
+    getDuration,
+    getMediaMetadata
 };
 export default FFMpegUtils
 

@@ -59,7 +59,7 @@ export interface SectionMedia {
     path: string
     durationSec?: number
     type: 'image' | 'video'
-    dimenstions?: { width: number, height: number }
+    dimensions?: { width: number, height: number }
 }
 
 export interface Meta {
