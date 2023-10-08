@@ -66,7 +66,7 @@ async function getDuration(pathOfAudio): Promise<number> {
 
 function getMediaMetadata(pathToMedia): Promise<{
     size,
-    durationSec,
+    duration,
     bit_rate,
     audio: {
         duration,
