@@ -88,7 +88,7 @@ export interface Meta {
     tenantVideoConfig: TenantVideoConfig
     manuscriptFile: string
     thumbnailFile: string
-    callback_url?: string
+    callback_url?: string // Not to be confused with GenerationConfig's publish webhook url, This is only used to tell media-core that render is finished. Its upto  media-core to call publish webhook or not
     publish_config: {
         platform: string
         playlistId: string
@@ -102,7 +102,8 @@ export interface Meta {
     render?: {
         output_url: string,
         status: string,
-        id: string
+        id: string,
+        files?: SectionMedia[]
     }
     resolution: {
         width: number

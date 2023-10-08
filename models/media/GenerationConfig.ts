@@ -18,7 +18,8 @@ export interface GenerationConfig {
     sourceContentUrl?: string,
     blogUrl?: string,
     chatgptConfig?: ChatGPTConfig,
-    publisherGoogleUserId?: string,
+    publisherUserId?: string,
+    publishWebhookUrl?: string // Not to be confused with Meta's callback_url, This is used by renderer to call publish webhook. While the callback_url is internally used by media-core to know when render is completed
     bgMusicYoutubeVideoUrl?: string,
     speechVariantName?: string,
     speechVoiceName?: string,

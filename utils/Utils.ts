@@ -19,6 +19,18 @@ interface ObjectWithText {
 
 export class Utils {
 
+    public static arrayDiff<T>(arr1: T[], arr2: T[]): T[] {
+        const set1 = new Set(arr1);
+        const set2 = new Set(arr2);
+        const uncommonElements = new Set([...set1, ...set2]);
+        for (const element of set1) {
+            if (set2.has(element)) {
+                uncommonElements.delete(element);
+            }
+        }
+        return Array.from(uncommonElements);
+    }
+
     public static shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             // Generate a random index between 0 and i (inclusive)
