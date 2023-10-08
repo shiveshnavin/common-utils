@@ -353,7 +353,8 @@ export class Utils {
             url: url,
             directory: dirName,
             fileName: fileName,
-            cloneFiles: false
+            cloneFiles: false,
+            timeout: 60000
         });
         return downloader.download()
     }
