@@ -93,7 +93,15 @@ export interface Meta {
         platform: string
         playlistId: string
         userId: string
-        bgMusicMetadata?: any
+        bgMusicMetadata?: { // StockMedia
+            id?: string
+            durationSec?: number
+            meta?: any
+            url?: string
+            platform?: string
+            source?: "url" | "local"
+            theme?: string
+        }
     }
     schedule: {
         id: string
