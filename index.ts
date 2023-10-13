@@ -15,6 +15,7 @@ export * from './utils/ChatGptApi'
 export * from './models/media/TranscriptPipeInput'
 export { Themes } from './models/media/Themes'
 export * from './models/scheduler/Schedule'
+export * from './utils/Auditlog'
 
 import FFMpegUtils from "./utils/FFMpegUtils"
 
