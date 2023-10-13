@@ -23,18 +23,25 @@ export class Auditlog {
         return new AuditlogEvent(this.appname, logname, action, this.logging)
     }
 
-    public static get(appName: string): Auditlog {
+    public static get(appname?: string): Auditlog {
         let configJson: string
         let credsFile = 'audit_log_creds.json'
 
         if (fs.existsSync('config.json')) {
             configJson = fs.readFileSync('config.json').toString()
-            credsFile = JSON.parse(configJson)?.audit_log_creds;
+            let config = JSON.parse(configJson)
+            credsFile = config?.audit_log_creds;
+            if (!appname && config.appname) {
+                appname = config.appname
+            }
+        }
+        if (!appname) {
+            throw new Error('must provide `appname` either in config.json or as param to get()')
         }
         if (!fs.existsSync(credsFile)) {
             throw new Error('Must provide audit_log_creds in config.json or create a file `audit_log_creds.json` in root dir')
         }
-        let logger = new Auditlog(appName, credsFile)
+        let logger = new Auditlog(appname, credsFile)
         return logger
     }
 
