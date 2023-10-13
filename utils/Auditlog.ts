@@ -60,6 +60,7 @@ export class AuditlogEvent {
         action?: string
         status?: Status
         corrid?: string
+        tenant?: string
         perftime?: number
 
     } = {}
@@ -83,10 +84,17 @@ export class AuditlogEvent {
 
     fromreq(req: any) {
         if (req.headers) {
+            if (req.headers['x-tenant']) {
+                this.data.tenant = req.headers['x-tenant']
+            }
+            if (req.headers['tenant']) {
+                this.data.tenant = req.headers['tenant']
+            }
             if (req.headers['x-correlation-id']) {
                 return this.corrid(req.headers['x-correlation-id'])
             }
         }
+
         return this;
     }
 
