@@ -172,12 +172,3 @@ export class AuditlogEvent {
     }
 
 }
-
-function test() {
-    Auditlog.get('test')
-        .event('test-action-' + Utils.generateRandomID(5))
-        .corrid(Utils.generateRandomID(10))
-        .status('COMPLETED')
-        .commit()
-}
-// test()
