@@ -83,6 +83,15 @@ export class AuditlogEvent {
         return this
     }
 
+    fromreq(req: any) {
+        if (req.headers) {
+            if (req.headers['x-correlation-id']) {
+                return this.corrid(req.headers['x-correlation-id'])
+            }
+        }
+        return this;
+    }
+
     corrid(corrid: string): AuditlogEvent {
         this.data.corrid = corrid
         return this
@@ -103,12 +112,14 @@ export class AuditlogEvent {
         if (status) {
             this.data.status = status
         }
-        let opid = this.data.corrid || this.data.action
+        let opid = this.data.corrid || this.data.action + "-" + Utils.generateRandomID(10)
         const metadata: LogEntry = {
             labels: {
                 //@ts-ignore
                 'appname': this.data.appname,
-                'type': 'auditlog'
+                //@ts-ignore
+                'operation': this.data.action,
+                'type': 'auditlog',
             },
             operation: {
                 id: opid,
