@@ -60,8 +60,6 @@ export class AuditlogEvent {
         action?: string
         status?: Status
         corrid?: string
-
-        payload?: any
         perftime?: number
 
     } = {}
@@ -79,7 +77,7 @@ export class AuditlogEvent {
 
 
     payload(payload: any): AuditlogEvent {
-        this.data.payload = payload
+        Object.assign(this.data, payload)
         return this
     }
 
