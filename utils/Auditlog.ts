@@ -129,6 +129,10 @@ export class AuditlogEvent {
             },
             operation: {
                 id: opid,
+                //@ts-ignore
+                first: ['SCHEDULED', 'PROCESSING'].includes(this.data.status),
+                //@ts-ignore
+                last: ['FAILED', 'SUCCESS'].includes(this.data.status),
                 producer: this.data.appname
             },
             spanId: opid,
