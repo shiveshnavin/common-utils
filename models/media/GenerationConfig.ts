@@ -1,10 +1,11 @@
+import { Schedule } from "../scheduler/Schedule";
 import { ChatGPTConfig } from "./ChatGPTConfig";
 
 export interface GenerationConfig {
     default_transition_obj?: any;
     playlistId?: any;
     extras?: {
-        schedule?: any
+        schedule?: Schedule
     },
     genId?: string,
     renderComposition?: 'SemibitComposition'
