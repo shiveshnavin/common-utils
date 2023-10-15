@@ -49,10 +49,37 @@ export class FileUploader {
     const fileData = fs.readFileSync(path.join(uploadDir, fileName));
     const uploadUrl = oracleAPI + encodeURIComponent(fileName);
 
-    await axios.put(uploadUrl, fileData);
+    await axios.put(uploadUrl, fileData, {
+      headers: {
+        "Content-Type": getContentTypeFromFilename(fileName)
+      }
+    });
     return {
       url: uploadUrl
     }
   }
 
+}
+function getContentTypeFromFilename(filename) {
+  const extension = filename.split('.').pop().toLowerCase();
+
+  const contentTypeMap = {
+    jpg: 'image/jpeg',
+    png: 'image/png',
+    mp4: 'video/mp4',
+    mp3: 'audio/mpeg',
+    zip: 'application/zip',
+    rar: 'application/x-rar-compressed',
+    exe: 'application/x-msdownload',
+    mov: 'video/quicktime',
+    jpeg: 'image/jpeg',
+    aac: 'audio/aac',
+    wav: 'audio/wav',
+    pdf: 'application/pdf',
+  };
+
+  const contentType = contentTypeMap[extension];
+
+  // If content type is found, return it; otherwise, return application/octet-stream
+  return contentType ? contentType : 'application/octet-stream';
 }
