@@ -18,6 +18,14 @@ interface ObjectWithText {
 }
 
 export class Utils {
+    public static startsWithAny(string, prefixes) {
+        for (const prefix of prefixes) {
+            if (string.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static arrayDiff<T>(arr1: T[], arr2: T[]): T[] {
         const set1 = new Set(arr1);
