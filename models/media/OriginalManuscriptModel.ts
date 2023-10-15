@@ -39,9 +39,9 @@ export class Transcript {
     duration: number // duration in frames 
     offset: number // offset in frames
     bubble: {
-        image?: string
+        imageAbsPath?: string
         text: string
-        type: string
+        type: 'simple' | 'slide_up'
     }
 }
 
