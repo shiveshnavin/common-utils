@@ -28,10 +28,13 @@ export class FileUploader {
     }
   }
 
+  targetUploadUrl(fileName) {
+    const oracleAPI = this.creds.url
+    return oracleAPI + encodeURIComponent(fileName)
+  }
 
   async upload(filePath: string) {
 
-    const oracleAPI = this.creds.url
 
     let uploadDir = 'uploads'
     if (!fs.existsSync(uploadDir)) {
@@ -47,7 +50,7 @@ export class FileUploader {
     });
 
     const fileData = fs.readFileSync(path.join(uploadDir, fileName));
-    const uploadUrl = oracleAPI + encodeURIComponent(fileName);
+    const uploadUrl = this.targetUploadUrl(fileName);
 
     await axios.put(uploadUrl, fileData, {
       headers: {
