@@ -38,6 +38,7 @@ export class Transcript {
     durationInSeconds: number
     duration: number // duration in frames 
     offset: number // offset in frames
+    extras: any
     bubble: {
         imageAbsPath?: string
         text: string
