@@ -360,6 +360,14 @@ export class Utils {
         return result;
     }
 
+    public static getFileNameFromURL(url) {
+        const parsedURL = new URL(url);
+        const pathname = parsedURL.pathname;
+        const parts = pathname.split('/');
+        const filename = parts[parts.length - 1];
+        return filename;
+    }
+
     public static downloadFile(url, fullOutFilePath, isOverwrite = false): any {
         if (existsSync(fullOutFilePath) && !isOverwrite) {
             console.log('Skipping Download of exisiting file')
