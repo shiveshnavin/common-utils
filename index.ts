@@ -16,6 +16,7 @@ export * from './models/media/TranscriptPipeInput'
 export { Themes } from './models/media/Themes'
 export * from './models/scheduler/Schedule'
 export * from './utils/Auditlog'
+export * from './utils/ChromeCluster'
 
 import FFMpegUtils from "./utils/FFMpegUtils"
 
