@@ -1,6 +1,7 @@
 git fetch origin 
 git stash
 git checkout main
+git reset --hard origin/main
 git stash pop
 git add -A
 git commit -m "update: $1"
