@@ -1,4 +1,7 @@
-git pull origin main
+git fetch origin 
+git stash
+git checkout main
+git stash pop
 git add -A
 git commit -m "update: $1"
 git fetch
