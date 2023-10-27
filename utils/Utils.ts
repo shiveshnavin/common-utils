@@ -27,6 +27,42 @@ export class Utils {
         return false;
     }
 
+
+    public static getFullUrlFromRequest(req) {
+        const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+        return url;
+    }
+    public static stringContainsAnyWord(str: string, wordList: Array<String>) {
+        const regex = new RegExp(wordList.join('|'), 'i');
+        return regex.test(str);
+    }
+
+    public static extractEnclosedArrString(inputString) {
+        const regex = /\[[^\]]*\]/g;
+        if (typeof inputString != 'string') {
+            inputString = JSON.stringify(inputString)
+        }
+        const results = inputString.match(regex);
+        return results[0];
+    }
+
+
+    public static extractEnclosedObjString(inputString) {
+        const regex = /\{[^\}]*\}/g;
+        const results = inputString.match(regex);
+        return results[0];
+    }
+    public static extractCodeFromMarkdown(markdown) {
+        let codeBlocks = [];
+        let regex = /```(.+?)\s*([\s\S]+?)```/gs;
+        let match;
+        while (match = regex.exec(markdown)) {
+            codeBlocks.push(match[2]);
+        }
+        return codeBlocks;
+    }
+
+
     public static arrayDiff<T>(arr1: T[], arr2: T[]): T[] {
         const set1 = new Set(arr1);
         const set2 = new Set(arr2);
