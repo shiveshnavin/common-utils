@@ -41,8 +41,13 @@ export class Transcript {
     extras: any
     bubble: {
         imageAbsPath?: string
-        text: string
-        type: 'text' | 'slide_up' | 'graph' | 'pointers'
+        text?: string
+        pointers?: string[]
+        graph?: {
+            nodes: { label: string, icon: string }[],
+            edges: { source: string, target: string, label: string }[],
+        }
+        type?: 'text' | 'slide_up' | 'graph' | 'pointers'
     }
 }
 
