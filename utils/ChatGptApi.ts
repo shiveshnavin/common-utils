@@ -7,7 +7,8 @@ export interface ChatGptResponse {
     conversationId: string
     response_time: number
     messageId?: string
-    code?: number
+    code?: 106004 | 200 | 500
+    message?: string //error message
 }
 
 export class ChatGptApi {

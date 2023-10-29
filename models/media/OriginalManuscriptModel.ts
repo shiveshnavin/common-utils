@@ -42,7 +42,7 @@ export class Transcript {
     bubble: {
         imageAbsPath?: string
         text: string
-        type: 'simple' | 'slide_up' | 'graph'
+        type: 'text' | 'slide_up' | 'graph' | 'pointers'
     }
 }
 
