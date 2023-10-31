@@ -25,7 +25,7 @@ export class Tick {
         this.volume = parseFloat(body.volume || body.volume_traded);
         this.depth = body.depth
         this.oi = parseFloat(body.oi);
-        this.last_price = parseFloat(body.last_price || body.close || body.ohlc.close);
+        this.last_price = parseFloat(body.last_price || body.close || body.ohlc?.close);
         this.change = parseFloat(body.change)
         this.stockData = body.stockData;
     }
