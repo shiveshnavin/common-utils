@@ -176,6 +176,7 @@ export class Utils {
 
     public static log(req, ...params) {
         let corrid = '-'
+        let tenant = undefined
         if (req && req.header('x-correlation-id')) {
             corrid = req.header('x-correlation-id');
         }
@@ -184,9 +185,13 @@ export class Utils {
         } else if (typeof req == 'string') {
             corrid = req
         }
+
+        if (req && req.header('x-tenant')) {
+            tenant = req.header('x-tenant');
+        }
         const formattedTime = istTime.format('M/DD/YY, h:mm:ss:SSS A');
 
-        console.log(`(corrid=${corrid}) (time=${formattedTime}) `, ...params)
+        console.log(`(corrid=${corrid}) (time=${formattedTime}) `, tenant ? `(tenant=${tenant})` : '', ...params)
     }
 
     public static getHighestResMedia(mediaArray: { w, h }) {
