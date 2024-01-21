@@ -1,5 +1,5 @@
 import { execSync, exec } from 'child_process'
-import { Utils } from 'common-utils'
+import { Utils } from './Utils'
 import path from 'path'
 import { existsSync, unlinkSync } from 'fs';
 
