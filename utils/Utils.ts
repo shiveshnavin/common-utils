@@ -11,6 +11,7 @@ import * as OTPAuth from "otpauth";
 import parser from "otpauth-migration-parser";
 import moment from 'moment-timezone'
 import crypto from 'crypto'
+import * as _ from 'lodash'
 const istTime = moment().tz('Asia/Kolkata');
 
 interface ObjectWithText {
@@ -113,13 +114,28 @@ export class Utils {
         }
     }
 
+
+    /**
+     * Should avoid this function
+     * @param key 
+     * @returns 
+     */
+    public static getKeySync(key) {
+        let file = 'config.json'
+        if (!fs.existsSync(file)) {
+            return false
+        }
+        let prefs = JSON.parse(fs.readFileSync(file).toString())
+        return _.get(prefs, key)
+    }
+
     public static async getKeyAsync(key) {
         let file = 'config.json'
         if (!fs.existsSync(file)) {
             return false
         }
         let prefs = JSON.parse(fs.readFileSync(file).toString())
-        return prefs[key]
+        return _.get(prefs, key)
     }
 
     public static async setKeyAsync(key, value) {
@@ -128,7 +144,7 @@ export class Utils {
             return false
         }
         let prefs = JSON.parse(fs.readFileSync(file).toString())
-        prefs[key] = value
+        _.set(prefs, key, value)
         fs.writeFileSync(file, JSON.stringify(prefs, undefined, 2))
     }
 
