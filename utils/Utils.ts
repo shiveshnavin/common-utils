@@ -385,6 +385,21 @@ export class Utils {
         }
     }
 
+
+
+    public static readFileToString(path) {
+        if (!fs.existsSync(path)) {
+            return undefined
+        }
+        try {
+            let fileStr = fs.readFileSync(path)
+            return fileStr.toString()
+        } catch (e) {
+            console.error('Error converting file to string', e.message)
+            return undefined
+        }
+    }
+
     public static getFullUrlFromRequest(req) {
         const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
         return url;
