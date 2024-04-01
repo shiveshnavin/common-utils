@@ -3,7 +3,7 @@ export class ApiResponse {
     message?: string
     data?: any
     constructor(
-        status?: 'success' | 'failed',
+        status: 'success' | 'failed' = "success",
         message?: string,
         data?: any) {
         this.status = status
@@ -16,4 +16,11 @@ export class ApiResponse {
     static notOk(message?: string) {
         return new ApiResponse("failed", message)
     }
+}
+
+
+export interface AuthUser {
+    email: string,
+    password: string,
+    id?: string
 }
