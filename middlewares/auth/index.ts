@@ -51,10 +51,15 @@ export function createAuthMiddleware(
     authApp.use(bodyParser.urlencoded())
     authApp.use(bodyParser.json())
     authApp.use((req, res, next) => {
-        if (skipAuthRoutes?.some((route) => { return req.path.match(route) })) {
+        if (skipAuthRoutes?.some((route) => {
+            return route.includes("*") ?
+                req.path.match(route) :
+                req.path == route;
+        })) {
             if (logLevel > 4) {
                 Utils.logPlain('Skipping auth check for ', req.path)
             }
+            next()
         } else {
             let authorization: string = (req.headers['authorization'] || req.query.authorization) as string
             if (authorization) {
