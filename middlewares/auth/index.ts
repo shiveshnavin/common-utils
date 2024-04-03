@@ -184,6 +184,8 @@ export function createAuthMiddleware(
 
     }
 
-
+    authApp.get('/google', (req, res) => {
+        res.send('ok')
+    })
     return authApp
 }
