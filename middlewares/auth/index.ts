@@ -180,12 +180,8 @@ export function createAuthMiddleware(
             authMethodsConfig.google.creds,
             saveAndRedirectUser,
             authMethodsConfig.google.defaultSignInReturnUrl)
-        app.all('/auth/google', googleSigninRouter)
-
+        authApp.use('/auth/google', googleSigninRouter)
     }
 
-    authApp.get('/google', (req, res) => {
-        res.send('ok')
-    })
     return authApp
 }

@@ -683,11 +683,12 @@ export class Utils {
 
 
     public static appendQueryParam(existingUrl, paramName, paramValue) {
-        const url = new URL(existingUrl);
-        const params = new URLSearchParams(url.search);
-        params.append(paramName, paramValue);
-        url.search = params.toString();
-        const updatedUrl = url.toString();
-        return updatedUrl;
+        let parts = existingUrl.split("?")
+        let left = parts[0]
+        let right = `?${paramName}=${paramValue}`
+        if (parts[1]) {
+            right = right + "&" + parts[1]
+        }
+        return left + right;
     }
 }
