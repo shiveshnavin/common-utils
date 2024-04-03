@@ -18,7 +18,7 @@ export function createAuthMiddleware(
     db: MultiDbORM,
     app: Express,
     skipAuthRoutes: string[] = [],
-    loginUser?: (email: string, password: string, id?: string) => Promise<AuthUser | undefined>,
+    getUser?: (email: string, id?: string) => Promise<AuthUser | undefined>,
     saveUser?: (user: AuthUser, req: any, res: any) => Promise<AuthUser>,
     logLevel: 0 | 1 | 2 | 3 | 4 = 0,
     authMethodsConfig: {
@@ -96,7 +96,7 @@ export function createAuthMiddleware(
 
     const TABLE_USER = 'users'
     const PASSWORD_HASH_LEN = 20
-    const hashPasswords = authMethodsConfig?.password?.usePlainText || false
+    const usePlainTextPassword = authMethodsConfig?.password?.usePlainText || false
 
     saveUser = saveUser || async function (user: AuthUser, _req: Express.Request, _res: Response): Promise<AuthUser> {
         await db.insert(TABLE_USER, user)
@@ -104,13 +104,9 @@ export function createAuthMiddleware(
         return user
     }
 
-    loginUser = loginUser || async function loginUser(email: string, password: string, id?: string): Promise<AuthUser | undefined> {
-        let hashPassword = Utils.generateHash(password, PASSWORD_HASH_LEN)
-        if (hashPasswords) {
-            hashPassword = password
-        }
+    getUser = getUser || async function getUser(email: string, id?: string): Promise<AuthUser | undefined> {
+
         let filter: any = {
-            password: hashPassword
         }
         if (email) {
             filter.email = email
@@ -126,26 +122,43 @@ export function createAuthMiddleware(
     }
 
     async function signUpUser(body: AuthUser, req: any, res: any): Promise<AuthUser | undefined> {
+        const { email, id } = body
         //@ts-ignore
-        let user: any = await loginUser(email, password, id)
+        let user: any = await getUser(email, id)
         if (user) {
             Object.assign(user, body)
         } else {
             user = body
-            if (_.isEmpty(user.email) || _.isEmpty(user.password)) {
-                throw new Error('email, password cannot be empty')
-            }
             if (!user.id) {
                 user.id = Utils.generateUID(user.email)
             }
         }
-        if (user.password && !hashPasswords) {
+        if (user.password && !usePlainTextPassword) {
             user.password = Utils.generateHash(user.password, PASSWORD_HASH_LEN)
         }
         return (saveUser && await saveUser(user, req, res))
     }
     if (authMethodsConfig.password) {
         authApp.post('/auth/signup', async (req, res) => {
+            //@ts-ignore
+            let preAuthenticated = req.session.user != undefined
+            if (!preAuthenticated) {
+                //@ts-ignore
+                let user = await getUser(req.body.email, req.body.id)
+                if (user) {
+                    let password = req.body.password
+                    if (!usePlainTextPassword) {
+                        password = Utils.generateHash(user.password, PASSWORD_HASH_LEN)
+                    }
+                    if (user.password != password) {
+                        return res.status(401).send(ApiResponse.notOk('User credentials are incorrect'))
+                    }
+                }
+            }
+
+            if (_.isEmpty(req.body.email) || _.isEmpty(req.body.password)) {
+                throw new Error('email, password cannot be empty')
+            }
             signUpUser(req.body, req, res).then((user) => {
                 if (!res.headersSent)
                     res.send(ApiResponse.ok(user))
@@ -157,9 +170,17 @@ export function createAuthMiddleware(
         authApp.post('/auth/login', async (req, res) => {
             const [email, password, id] = [req.body.email, req.body.password, req.body.id]
             //@ts-ignore
-            let user = await loginUser(email, password, id)
+            let user = await getUser(email, id)
+
             if (user) {
-                res.send(ApiResponse.ok(user))
+                let hashPassword = Utils.generateHash(password, PASSWORD_HASH_LEN)
+                if (usePlainTextPassword) {
+                    hashPassword = password
+                }
+                if (user.password == hashPassword)
+                    res.send(ApiResponse.ok(user))
+                else
+                    res.status(401).send(ApiResponse.notOk('User not found or the credentials are incorrect'))
             } else {
                 res.status(401).send(ApiResponse.notOk('User not found or the credentials are incorrect'))
             }

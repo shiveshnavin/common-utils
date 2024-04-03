@@ -71,7 +71,7 @@ export function GoogleSigninMiddleware(
     router.get('/callback', async (req, res) => {
         let code = req.query.code as string
         //@ts-ignore
-        const returnUrl = req.session.signin_callback
+        const returnUrl = req.session.signin_callback || default_signin_callback
         try {
             let tokenresp = await exchangeGoogleCode(code)
             let idToken = tokenresp.tokens.id_token
@@ -86,7 +86,7 @@ export function GoogleSigninMiddleware(
             saveAndRedirectUser(usr, returnUrl, req, res)
         } catch (e: any) {
             Utils.logPlainWithLevel(0, 'Error while exchanging google token.', e.message)
-            let redr = Utils.appendQueryParam(returnUrl || default_signin_callback, 'result', 'failure')
+            let redr = Utils.appendQueryParam(returnUrl, 'result', 'failure')
             res.redirect(redr)
         }
     })
