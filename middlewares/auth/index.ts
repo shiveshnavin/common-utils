@@ -176,10 +176,11 @@ export function createAuthMiddleware(
                 res.redirect(returnUrl)
             }
         }
-        authApp.all('google', GoogleSigninMiddleware(
+        const googleSigninRouter = GoogleSigninMiddleware(
             authMethodsConfig.google.creds,
             saveAndRedirectUser,
-            authMethodsConfig.google.defaultSignInReturnUrl))
+            authMethodsConfig.google.defaultSignInReturnUrl)
+        app.all('/auth/google', googleSigninRouter)
 
     }
 
