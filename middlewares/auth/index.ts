@@ -176,7 +176,7 @@ export function createAuthMiddleware(
                 res.redirect(returnUrl)
             }
         }
-        authApp.all('/google', GoogleSigninMiddleware(
+        authApp.all('google', GoogleSigninMiddleware(
             authMethodsConfig.google.creds,
             saveAndRedirectUser,
             authMethodsConfig.google.defaultSignInReturnUrl))
