@@ -11,6 +11,8 @@ import jwt from 'jsonwebtoken'
 export * from './model'
 
 export function generateUserJwt(user: AuthUser, secret: string) {
+    if (typeof user == 'object')
+        user = JSON.parse(JSON.stringify(user))
     return jwt.sign(user, secret, { expiresIn: "7200s", algorithm: 'HS256' })
 }
 
