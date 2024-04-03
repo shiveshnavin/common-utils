@@ -144,7 +144,7 @@ export function createAuthMiddleware(
         }
         return (saveUser && await saveUser(user, req, res))
     }
-    if (authMethodsConfig.password)
+    if (authMethodsConfig.password) {
         authApp.post('/auth/signup', async (req, res) => {
             signUpUser(req.body, req, res).then((user) => {
                 if (!res.headersSent)
@@ -154,17 +154,17 @@ export function createAuthMiddleware(
                     res.send(ApiResponse.notOk(e.message))
             })
         })
-
-    authApp.post('/auth/login', async (req, res) => {
-        const [email, password, id] = [req.body.email, req.body.password, req.body.id]
-        //@ts-ignore
-        let user = await loginUser(email, password, id)
-        if (user) {
-            res.send(ApiResponse.ok(user))
-        } else {
-            res.status(401).send(ApiResponse.notOk('User not found or the credentials are incorrect'))
-        }
-    })
+        authApp.post('/auth/login', async (req, res) => {
+            const [email, password, id] = [req.body.email, req.body.password, req.body.id]
+            //@ts-ignore
+            let user = await loginUser(email, password, id)
+            if (user) {
+                res.send(ApiResponse.ok(user))
+            } else {
+                res.status(401).send(ApiResponse.notOk('User not found or the credentials are incorrect'))
+            }
+        })
+    }
 
     if (authMethodsConfig.google) {
         async function saveAndRedirectUser(user: AuthUser, returnUrl: string, req: any, res: any) {
@@ -176,7 +176,7 @@ export function createAuthMiddleware(
                 res.redirect(returnUrl)
             }
         }
-        authApp.use('/google', GoogleSigninMiddleware(
+        authApp.all('/google', GoogleSigninMiddleware(
             authMethodsConfig.google.creds,
             saveAndRedirectUser,
             authMethodsConfig.google.defaultSignInReturnUrl))
