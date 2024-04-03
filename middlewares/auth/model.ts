@@ -20,7 +20,9 @@ export class ApiResponse {
 
 
 export interface AuthUser {
+    name: string,
+    avatar: string,
     email: string,
-    password: string,
+    password?: string,
     id?: string
 }

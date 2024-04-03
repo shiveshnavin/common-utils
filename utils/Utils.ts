@@ -18,6 +18,7 @@ interface ObjectWithText {
     text: string;
 }
 
+var cacheConfig = {}
 export class Utils {
     public static startsWithAny(string, prefixes) {
         for (const prefix of prefixes) {
@@ -129,6 +130,20 @@ export class Utils {
         return _.get(prefs, key)
     }
 
+    public static getCachedKeySync(key) {
+        if (cacheConfig) {
+            return _.get(cacheConfig, key)
+        }
+        let file = 'config.json'
+        if (!fs.existsSync(file)) {
+            return false
+        }
+        let prefs = JSON.parse(fs.readFileSync(file).toString())
+        cacheConfig = prefs
+        return _.get(prefs, key)
+    }
+
+
     public static async getKeyAsync(key) {
         let file = 'config.json'
         if (!fs.existsSync(file)) {
@@ -184,6 +199,16 @@ export class Utils {
             }
             return diff;
         })(objectOld, objectNew)
+    }
+
+    public static logPlainWithLevel(level: 0 | 1 | 2 | 3 | 4, ...params) {
+        Utils.logWithLevel(level, undefined, ...params)
+    }
+
+    public static logWithLevel(level: 0 | 1 | 2 | 3 | 4, req, ...params) {
+        let curLevel = Utils.getCachedKeySync('log_level')
+        if (curLevel >= level)
+            Utils.log(undefined, ...params)
     }
 
     public static logPlain(...params) {
@@ -654,5 +679,15 @@ export class Utils {
 
         // write the binary data to a JPG file
         fs.writeFileSync(fileName, binaryData, 'binary');
+    }
+
+
+    public static appendQueryParam(existingUrl, paramName, paramValue) {
+        const url = new URL(existingUrl);
+        const params = new URLSearchParams(url.search);
+        params.append(paramName, paramValue);
+        url.search = params.toString();
+        const updatedUrl = url.toString();
+        return updatedUrl;
     }
 }
