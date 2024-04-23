@@ -19,10 +19,23 @@ export function generateUserJwt(user: AuthUser, secret: string) {
     return jwt.sign(user, secret, { expiresIn: "7200s", algorithm: 'HS256' })
 }
 
+/**
+ * 
+ * @param db Instance of MultiDbORM
+ * @param app 
+ * @param skipAuthRoutes 
+ * @param sessionMiddlware See https://www.npmjs.com/package/express-session#compatible-session-stores
+ * @param getUser 
+ * @param saveUser 
+ * @param logLevel 0 | 1 | 2 | 3 | 4
+ * @param authMethodsConfig 
+ * @returns 
+ */
 export function createAuthMiddleware(
     db: MultiDbORM,
     app: Express,
     skipAuthRoutes: string[] = [],
+    sessionMiddlware?: (config: any) => any,
     getUser?: (email: string, id?: string) => Promise<AuthUser | undefined>,
     saveUser?: (user: AuthUser, req: any, res: any) => Promise<AuthUser>,
     logLevel: 0 | 1 | 2 | 3 | 4 = 0,
@@ -63,7 +76,7 @@ export function createAuthMiddleware(
     }
 
     if (!isSessionInitialized()) {
-        app.use(session({
+        app.use(sessionMiddlware || session({
             secret: secret,
             resave: false,
             saveUninitialized: false
