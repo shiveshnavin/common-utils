@@ -53,7 +53,7 @@ export function createAuthMiddleware(
     }
 
     function isSessionInitialized() {
-        const middleware = app._router?.stack;
+        const middleware = app._router?.stack || [];
         for (const layer of middleware) {
             if (layer.handle && layer.handle.name === 'session') {
                 return true;
