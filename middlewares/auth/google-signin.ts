@@ -1,6 +1,8 @@
+//@ts-ignore
 import { auth } from '@googleapis/drive';
 import { Utils } from 'common-utils';
 import express from 'express'
+//@ts-ignore
 import jwt from 'jsonwebtoken'
 import { AuthUser } from './model';
 

@@ -1,12 +1,15 @@
 import express, { Express, Response } from 'express'
 import { MultiDbORM } from 'multi-db-orm'
 import * as bodyParser from 'body-parser'
+//@ts-ignore
 import session from 'express-session'
 import { Utils } from '../../utils/Utils'
 import { ApiResponse } from './model'
+//@ts-ignore
 import _ from 'lodash'
 import { AuthUser } from './model'
 import { GoogleSigninConfig, GoogleSigninMiddleware } from './google-signin'
+//@ts-ignore
 import jwt from 'jsonwebtoken'
 export * from './model'
 
