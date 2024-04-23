@@ -73,6 +73,9 @@ export function createAuthMiddleware(
 
     skipAuthRoutes.push('/auth/login')
     skipAuthRoutes.push('/auth/google/*')
+    if (authMethodsConfig.password) {
+        skipAuthRoutes.push('/auth/signup')
+    }
     authApp.use(bodyParser.urlencoded())
     authApp.use(bodyParser.json())
     authApp.use((req, res, next) => {
