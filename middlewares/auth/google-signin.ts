@@ -1,6 +1,6 @@
 //@ts-ignore
 import { auth } from '@googleapis/drive';
-import { Utils } from 'common-utils';
+import { Utils } from '../../';
 import express from 'express'
 //@ts-ignore
 import jwt from 'jsonwebtoken'
