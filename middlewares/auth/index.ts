@@ -169,7 +169,7 @@ export function createAuthMiddleware(
                 if (user) {
                     let password = req.body.password
                     if (!usePlainTextPassword) {
-                        password = Utils.generateHash(user.password, PASSWORD_HASH_LEN)
+                        password = Utils.generateHash(password, PASSWORD_HASH_LEN)
                     }
                     if (user.password != password) {
                         return res.status(401).send(ApiResponse.notOk('User credentials are incorrect'))
@@ -178,9 +178,13 @@ export function createAuthMiddleware(
             }
 
             if (_.isEmpty(req.body.email) || _.isEmpty(req.body.password)) {
-                throw new Error('email, password cannot be empty')
+                return res.status(400).send(ApiResponse.notOk('email, password cannot be empty'))
             }
             signUpUser(req.body, req, res).then((user) => {
+                let token = generateUserJwt(user!, secret)
+                res.cookie('access_token', token)
+                res.header('access_token', token)
+                user!.access_token = token
                 if (!res.headersSent)
                     res.send(ApiResponse.ok(user))
             }).catch((e) => {

@@ -24,5 +24,6 @@ export interface AuthUser {
     avatar: string,
     email: string,
     password?: string,
-    id?: string
+    id?: string,
+    access_token?: string
 }
