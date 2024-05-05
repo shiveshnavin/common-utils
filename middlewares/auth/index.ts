@@ -11,6 +11,9 @@ import { AuthUser } from './model'
 import { GoogleSigninConfig, GoogleSigninMiddleware } from './google-signin'
 //@ts-ignore
 import jwt from 'jsonwebtoken'
+import { Mailer } from './mail/mailer'
+import MailConfig from '../../../common-creds/semibit/mail.json'
+export * from './mail/mailer'
 export * from './model'
 
 export function generateUserJwt(user: AuthUser, secret: string) {
@@ -40,6 +43,7 @@ export function createAuthMiddleware(
     saveUser?: (user: AuthUser, req: any, res: any) => Promise<AuthUser>,
     logLevel: 0 | 1 | 2 | 3 | 4 = 0,
     authMethodsConfig: {
+        mailer?: Mailer,
         password?: {
             usePlainText: boolean
         },
@@ -56,7 +60,15 @@ export function createAuthMiddleware(
     if (!db) {
         throw new Error('db must not be non-null')
     }
-
+    if (!authMethodsConfig.mailer) {
+        authMethodsConfig.mailer = new Mailer({
+            ...MailConfig,
+            app: 'Semibit',
+            company: 'Semibit Technologies',
+            instagram: "https://instagram.com/semibitin",
+            website: "https://www.semibit.in",
+        })
+    }
     const authApp = express.Router()
 
     let secret = Utils.getKeySync('auth.secret')

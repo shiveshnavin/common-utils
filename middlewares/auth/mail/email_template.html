@@ -1,0 +1,43 @@
+<div class="email-container"
+style = "background-color: #422959;color:white;max-width: 500px; font-family: 'Helvetica Neue', 'Helvetica', 'Arial',sans-serif; font-size: 15px; margin: 0 auto; overflow: hidden;" >
+    <!--- Email header, centered company logo and alt text-- ->
+        <div class="email-header" align = "center"
+style = "background-image: linear-gradient(#2D1C3C, #2D1C3C); padding-top: 12px;padding-bottom: 10px;" >
+    <a style=" color: #FFFFFF; text-decoration: none;" href = "{{host}}" target = "_blank" >
+        <img style="height: 100px;width: 100px; padding-top: 10px; " alt = "{{appname}}" class="center"
+src = "https://yoloplaysrv.firebaseapp.com/images/logo.png" />
+    <br>
+    <h2>{{ appname }}</h2>
+        < /a>
+        < /div>
+        < !--- /Email header--->
+
+        < !--- Email body-- ->
+            <div class="email-body" style = "padding:20px" >
+                <p>{{ body }}</p>
+                    <p>
+      If you have any questions / complaints or would like to provide your valuable feedback / feature requests please don't
+hesitate in reaching out to us at { { email } } <br></p>
+    < /div>
+    < !--- /Email body--->
+
+
+    < !--- Company info-- ->
+        <div  class="email-companyinfo"
+style = "color:black;max-width: 500px; background: #f0f0f0; font-size: 12px; margin: 0 auto; overflow: hidden; text-align: center;" >
+    <p>© { { appname } } 2021. All rights reserved.< br >
+        <a href="{{host}}" target = "_blank" > {{ companyname }}</a><br>
+            < a href = "{{privacy}}" target = "_blank" style = "font-size: 8px" > Privacy Policy < /a> |
+                < a href = "{{toc}}" target = "_blank" style = "font-size: 8px" > Terms and Conditions < /a>
+
+                    < /p>
+                    < /div>
+                    < !--- /Company info--->
+
+                    < !--- Privacy statement-- ->
+                        <div class="email-terms"
+style = "padding-left: 2%; padding-right: 2%; max-width: 500px; background: #f0f0f0; font-size: 9px; font-style: italic; color: #7a7a7a; margin: 0 auto; overflow: hidden; text-align: left;" >
+    </div>
+    < !--- /Privacy statement--->
+
+    < /div>
