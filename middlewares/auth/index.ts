@@ -104,8 +104,12 @@ export function createAuthMiddleware(
         } else {
             let authorization: string = (req.headers['authorization'] || req.query.authorization) as string
             if (authorization) {
-                authorization = authorization.split(" ")[0]
-                //todo auth
+                let user = getUserFromAccesstoken(req)
+                if (!user) {
+                    return res.status(401).send(ApiResponse.notOk(`Unauthorized`))
+                }
+                //@ts-ignore
+                req.session.user = user
                 next()
             } else {
                 res.status(401).send(ApiResponse.notOk(`Missing authorization in headers`))
@@ -114,6 +118,23 @@ export function createAuthMiddleware(
         }
     })
 
+
+    function getUserFromAccesstoken(req: any) {
+        let authorization: string = (req.headers['authorization'] || req.query.authorization) as string
+        let [authorizationType, token] = authorization.split(" ")
+        if (!(authorizationType?.toLocaleLowerCase().trim() == 'bearer')) {
+            token = authorization
+        }
+        let ok = jwt.verify(token, secret)
+        if (!ok)
+            return undefined
+
+        let decoded = jwt.decode(token, {
+            json: true,
+            complete: true
+        })
+        return decoded?.payload
+    }
 
     const TABLE_USER = 'users'
     const PASSWORD_HASH_LEN = 20
@@ -159,6 +180,18 @@ export function createAuthMiddleware(
         }
         return (saveUser && await saveUser(user, req, res))
     }
+
+    authApp.get('/auth/me', async (req, res) => {
+        //@ts-ignore
+        let user = req.session?.user
+        if (!user) {
+            user = getUserFromAccesstoken(req)
+        }
+        if (!user) {
+            return res.send(401)
+        }
+        res.send(ApiResponse.ok(user))
+    })
     if (authMethodsConfig.password) {
         authApp.post('/auth/signup', async (req, res) => {
             //@ts-ignore
