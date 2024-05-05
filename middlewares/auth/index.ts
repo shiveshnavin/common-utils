@@ -13,6 +13,9 @@ import { GoogleSigninConfig, GoogleSigninMiddleware } from './google-signin'
 import jwt from 'jsonwebtoken'
 import { Mailer } from './mail/mailer'
 import MailConfig from '../../../common-creds/semibit/mail.json'
+//@ts-ignore
+import cookies from 'cookie-parser'
+
 export * from './mail/mailer'
 export * from './model'
 
@@ -70,6 +73,7 @@ export function createAuthMiddleware(
         })
     }
     const authApp = express.Router()
+    authApp.use(cookies())
 
     let secret = Utils.getKeySync('auth.secret')
     if (!secret) {
@@ -114,7 +118,7 @@ export function createAuthMiddleware(
             }
             next()
         } else {
-            let authorization: string = (req.headers['authorization'] || req.query.authorization) as string
+            let authorization: string = (req.headers['authorization'] || req.query.authorization) as string || (req.cookies && req.cookies['access_token'])
             if (authorization) {
                 let user = getUserFromAccesstoken(req)
                 if (!user) {
@@ -132,7 +136,7 @@ export function createAuthMiddleware(
 
 
     function getUserFromAccesstoken(req: any) {
-        let authorization: string = (req.headers['authorization'] || req.query.authorization) as string
+        let authorization: string = (req.headers['authorization'] || req.query.authorization) as string || req.cookies['access_token']
         let [authorizationType, token] = authorization.split(" ")
         if (!(authorizationType?.toLocaleLowerCase().trim() == 'bearer')) {
             token = authorization
@@ -227,8 +231,7 @@ export function createAuthMiddleware(
             }
             signUpUser(req.body, req, res).then((user) => {
                 let token = generateUserJwt(user!, secret)
-                res.cookie('access_token', token)
-                res.header('access_token', token)
+                addAccessToken(res, token)
                 user!.access_token = token
                 if (!res.headersSent)
                     res.send(ApiResponse.ok(user))
@@ -247,14 +250,22 @@ export function createAuthMiddleware(
                 if (usePlainTextPassword) {
                     hashPassword = password
                 }
-                if (user.password == hashPassword)
+                if (user.password == hashPassword) {
+                    let token = generateUserJwt(user!, secret)
+                    addAccessToken(res, token)
                     res.send(ApiResponse.ok(user))
+                }
                 else
                     res.status(401).send(ApiResponse.notOk('User not found or the credentials are incorrect'))
             } else {
                 res.status(401).send(ApiResponse.notOk('User not found or the credentials are incorrect'))
             }
         })
+    }
+
+    function addAccessToken(res: Response, token: string) {
+        res.cookie('access_token', token)
+        res.header('access_token', token)
     }
 
     if (authMethodsConfig.google) {
@@ -264,6 +275,7 @@ export function createAuthMiddleware(
                 let token = generateUserJwt(loggedInUser, secret)
                 req.session.access_token = token
                 returnUrl = Utils.appendQueryParam(returnUrl, 'access_token', token)
+                addAccessToken(res, token)
                 res.redirect(returnUrl)
             }
         }
