@@ -141,9 +141,17 @@ export function createAuthMiddleware(
         if (!(authorizationType?.toLocaleLowerCase().trim() == 'bearer')) {
             token = authorization
         }
-        let ok = jwt.verify(token, secret)
-        if (!ok)
+
+        try {
+            let ok = jwt.verify(token, secret)
+            if (!ok)
+                return undefined
+        } catch (e: any) {
+            if (logLevel > 1) {
+                console.log('Error verifying JWT. ', e.message)
+            }
             return undefined
+        }
 
         let decoded = jwt.decode(token, {
             json: true,
