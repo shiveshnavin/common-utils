@@ -19,10 +19,13 @@ import cookies from 'cookie-parser'
 export * from './mail/mailer'
 export * from './model'
 
-export function generateUserJwt(user: AuthUser, secret: string) {
+export function generateUserJwt(
+    user: AuthUser,
+    secret: string,
+    expiresInSec: string = "7200s") {
     if (typeof user == 'object')
         user = JSON.parse(JSON.stringify(user))
-    return jwt.sign(user, secret, { expiresIn: "7200s", algorithm: 'HS256' })
+    return jwt.sign(user, secret, { expiresIn: expiresInSec, algorithm: 'HS256' })
 }
 
 /**
@@ -34,7 +37,7 @@ export function generateUserJwt(user: AuthUser, secret: string) {
  * @param getUser 
  * @param saveUser 
  * @param logLevel 0 | 1 | 2 | 3 | 4
- * @param authMethodsConfig 
+ * @param config 
  * @returns 
  */
 export function createAuthMiddleware(
@@ -45,7 +48,8 @@ export function createAuthMiddleware(
     getUser?: (email: string, id?: string) => Promise<AuthUser | undefined>,
     saveUser?: (user: AuthUser, req: any, res: any) => Promise<AuthUser>,
     logLevel: 0 | 1 | 2 | 3 | 4 = 0,
-    authMethodsConfig: {
+    config: {
+        expiresInSec: string,
         mailer?: Mailer,
         password?: {
             usePlainText: boolean
@@ -55,6 +59,7 @@ export function createAuthMiddleware(
             defaultSignInReturnUrl: string
         }
     } = {
+            expiresInSec: "7200s",
             password: {
                 usePlainText: false
             }
@@ -63,8 +68,8 @@ export function createAuthMiddleware(
     if (!db) {
         throw new Error('db must not be non-null')
     }
-    if (!authMethodsConfig.mailer) {
-        authMethodsConfig.mailer = new Mailer({
+    if (!config.mailer) {
+        config.mailer = new Mailer({
             ...MailConfig,
             app: 'Semibit',
             company: 'Semibit Technologies',
@@ -102,7 +107,7 @@ export function createAuthMiddleware(
 
     skipAuthRoutes.push('/auth/login')
     skipAuthRoutes.push('/auth/google/*')
-    if (authMethodsConfig.password) {
+    if (config.password) {
         skipAuthRoutes.push('/auth/signup')
     }
     authApp.use(bodyParser.urlencoded())
@@ -159,7 +164,7 @@ export function createAuthMiddleware(
 
     const TABLE_USER = 'users'
     const PASSWORD_HASH_LEN = 20
-    const usePlainTextPassword = authMethodsConfig?.password?.usePlainText || false
+    const usePlainTextPassword = config?.password?.usePlainText || false
 
     saveUser = saveUser || async function (user: AuthUser, _req: Express.Request, _res: Response): Promise<AuthUser> {
         await db.insert(TABLE_USER, user)
@@ -213,7 +218,7 @@ export function createAuthMiddleware(
         }
         res.send(ApiResponse.ok(user))
     })
-    if (authMethodsConfig.password) {
+    if (config.password) {
         authApp.post('/auth/signup', async (req, res) => {
             //@ts-ignore
             let preAuthenticated = req.session.user != undefined
@@ -235,7 +240,7 @@ export function createAuthMiddleware(
                 return res.status(400).send(ApiResponse.notOk('email, password cannot be empty'))
             }
             signUpUser(req.body, req, res).then((user) => {
-                let token = generateUserJwt(user!, secret)
+                let token = generateUserJwt(user!, secret, config.expiresInSec)
                 addAccessToken(res, token)
                 user!.access_token = token
                 if (!res.headersSent)
@@ -256,7 +261,7 @@ export function createAuthMiddleware(
                     hashPassword = password
                 }
                 if (user.password == hashPassword) {
-                    let token = generateUserJwt(user!, secret)
+                    let token = generateUserJwt(user!, secret, config.expiresInSec)
                     addAccessToken(res, token)
                     res.send(ApiResponse.ok(user))
                 }
@@ -273,11 +278,11 @@ export function createAuthMiddleware(
         res.header('access_token', token)
     }
 
-    if (authMethodsConfig.google) {
+    if (config.google) {
         async function saveAndRedirectUser(user: AuthUser, returnUrl: string, req: any, res: any) {
             let loggedInUser = await signUpUser(user, req, res) as AuthUser
             if (!res.headersSent) {
-                let token = generateUserJwt(loggedInUser, secret)
+                let token = generateUserJwt(loggedInUser, secret, config.expiresInSec)
                 req.session.access_token = token
                 returnUrl = Utils.appendQueryParam(returnUrl, 'access_token', token)
                 addAccessToken(res, token)
@@ -285,9 +290,9 @@ export function createAuthMiddleware(
             }
         }
         const googleSigninRouter = GoogleSigninMiddleware(
-            authMethodsConfig.google.creds,
+            config.google.creds,
             saveAndRedirectUser,
-            authMethodsConfig.google.defaultSignInReturnUrl)
+            config.google.defaultSignInReturnUrl)
         authApp.use('/auth/google', googleSigninRouter)
     }
 
