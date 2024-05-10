@@ -147,9 +147,6 @@ export function createAuthMiddleware(
             if (!ok)
                 return undefined
         } catch (e: any) {
-            if (logLevel > 1) {
-                console.log('Error verifying JWT. ', e.message)
-            }
             return undefined
         }
 
