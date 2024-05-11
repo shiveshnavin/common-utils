@@ -28,6 +28,18 @@ export function generateUserJwt(
     return jwt.sign(user, secret, { expiresIn: expiresInSec, algorithm: 'HS256' })
 }
 
+export interface AuthMethodConfig {
+    expiresInSec: string,
+    mailer?: Mailer,
+    password?: {
+        changePasswordPath: string,
+        usePlainText: boolean
+    },
+    google?: {
+        creds: GoogleSigninConfig,
+        defaultSignInReturnUrl: string
+    }
+}
 /**
  * 
  * @param db Instance of MultiDbORM
@@ -48,23 +60,20 @@ export function createAuthMiddleware(
     getUser?: (email: string, id?: string) => Promise<AuthUser | undefined>,
     saveUser?: (user: AuthUser, req: any, res: any) => Promise<AuthUser>,
     logLevel: 0 | 1 | 2 | 3 | 4 = 0,
-    config: {
-        expiresInSec: string,
-        mailer?: Mailer,
-        password?: {
-            usePlainText: boolean
-        },
-        google?: {
-            creds: GoogleSigninConfig,
-            defaultSignInReturnUrl: string
-        }
-    } = {
-            expiresInSec: "7200s",
+    config: AuthMethodConfig = {
+        expiresInSec: "7200s",
             password: {
-                usePlainText: false
+                usePlainText: false,
+                changePasswordPath: "/changepassword"
             }
         }
 ) {
+
+    const TABLE_USER = 'users'
+    const TABLE_FORGOTPASSWORD = "forgotPassword"
+    const PASSWORD_HASH_LEN = 20
+    const usePlainTextPassword = config?.password?.usePlainText || false
+
     if (!db) {
         throw new Error('db must not be non-null')
     }
@@ -169,9 +178,6 @@ export function createAuthMiddleware(
         return decoded?.payload
     }
 
-    const TABLE_USER = 'users'
-    const PASSWORD_HASH_LEN = 20
-    const usePlainTextPassword = config?.password?.usePlainText || false
 
     saveUser = saveUser || async function (user: AuthUser, _req: Express.Request, _res: Response): Promise<AuthUser> {
         await db.insert(TABLE_USER, user)
@@ -277,6 +283,34 @@ export function createAuthMiddleware(
             } else {
                 res.status(401).send(ApiResponse.notOk('User not found or the credentials are incorrect'))
             }
+        })
+
+        authApp.post('/auth/forgotpassword', async (req,res) => {
+        const email = req.body.email
+        let validateEmail  = Utils.validateEmail(email)
+           if(!validateEmail){
+            res.status(400).send(ApiResponse.notOk('Invalid Email'))
+            return
+           }
+         const secrete = Utils.generateRandomID(20)
+         const host = req.get('host') || req.hostname;
+         const link = host+config.password?.changePasswordPath+'?secret='+secret;
+         const user: AuthUser = await db.getOne(TABLE_USER,{email:email}) //check for email in db and returns whole user row
+        
+         if(user==undefined){
+            return res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
+         }
+         const Object = { 
+            id: user.id,           
+            email: email,
+            link: link,
+            linkExp: Date.now()+10*60*1000
+        }
+         await db.insert(TABLE_FORGOTPASSWORD,Object)
+         res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
+
+         //send email
+         
         })
     }
 
