@@ -281,6 +281,13 @@ export class Utils {
         return source.split(search).join(replacement);
     };
 
+
+    public static getRandomNumber = function (from: number, to: number): number {
+        const range = to - from;
+        const randomNumber = Math.random() * range + from;
+        return randomNumber;
+    }
+
     public static generateRandomID(length = 10) {
         const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = '';

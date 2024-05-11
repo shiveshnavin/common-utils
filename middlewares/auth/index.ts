@@ -12,9 +12,9 @@ import { GoogleSigninConfig, GoogleSigninMiddleware } from './google-signin'
 //@ts-ignore
 import jwt from 'jsonwebtoken'
 import { Mailer } from './mail/mailer'
-import MailConfig from '../../../common-creds/semibit/mail.json'
 //@ts-ignore
 import cookies from 'cookie-parser'
+import path from 'path'
 
 export * from './mail/mailer'
 export * from './model'
@@ -69,6 +69,8 @@ export function createAuthMiddleware(
         throw new Error('db must not be non-null')
     }
     if (!config.mailer) {
+        let MailConfig = Utils.readFileToObject(path.join(__dirname, '../../../common-creds/semibit/mail.json'))
+
         config.mailer = new Mailer({
             ...MailConfig,
             app: 'Semibit',
@@ -131,6 +133,8 @@ export function createAuthMiddleware(
                 }
                 //@ts-ignore
                 req.session.user = user
+                res.cookie('access_token', getAccessTokenFromHeader(req))
+                res.header('Set-Cookie', `access_toke=${getAccessTokenFromHeader(req)}`)
                 next()
             } else {
                 res.status(401).send(ApiResponse.notOk(`Missing authorization in headers`))
@@ -140,13 +144,16 @@ export function createAuthMiddleware(
     })
 
 
-    function getUserFromAccesstoken(req: any) {
+    function getAccessTokenFromHeader(req: any) {
         let authorization: string = (req.headers['authorization'] || req.query.authorization) as string || req.cookies['access_token']
         let [authorizationType, token] = authorization.split(" ")
         if (!(authorizationType?.toLocaleLowerCase().trim() == 'bearer')) {
             token = authorization
         }
-
+        return token
+    }
+    function getUserFromAccesstoken(req: any) {
+        let token = getAccessTokenFromHeader(req)
         try {
             let ok = jwt.verify(token, secret)
             if (!ok)
