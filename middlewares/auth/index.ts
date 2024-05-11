@@ -134,7 +134,7 @@ export function createAuthMiddleware(
                 //@ts-ignore
                 req.session.user = user
                 res.cookie('access_token', getAccessTokenFromHeader(req))
-                res.header('Set-Cookie', `access_toke=${getAccessTokenFromHeader(req)}`)
+                res.header('Set-Cookie', `access_token=${getAccessTokenFromHeader(req)}`)
                 next()
             } else {
                 res.status(401).send(ApiResponse.notOk(`Missing authorization in headers`))
