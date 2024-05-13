@@ -67,6 +67,22 @@ export function ZipFiles(filesToExport: string[], outputPath: string): Promise<n
     return promise
 }
 
+export function UnzipGzFile(filePath, outFile) {
+    const zlib = require("zlib");
+    const gunzip = zlib.createGunzip();
+    const input = fs.createReadStream(filePath);
+    const output = fs.createWriteStream(outFile);
+
+    return new Promise((resolve, reject) => {
+        input.pipe(gunzip).pipe(output).on("finish", () => {
+            if (fs.existsSync(outFile))
+                resolve()
+            else
+                reject()
+        });
+    })
+}
+
 export async function UnzipFiles(filePath, targetDir) {
     try {
         // Ensure that the targetDir exists before unzipping

@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "npm run build",
+    "preinstall": "npm run build",
     "build": "tsc --project tsconfig.json --skipLibCheck --noEmitOnError --noUnusedLocals --noUnusedParameters --allowUnusedLabels"
   },
   "repository": {
