@@ -4,7 +4,7 @@ import * as bodyParser from 'body-parser'
 //@ts-ignore
 import session from 'express-session'
 import { Utils } from '../../utils/Utils'
-import { ApiResponse } from './model'
+import { ApiResponse, ForgotPassword } from './model'
 //@ts-ignore
 import _ from 'lodash'
 import { AuthUser } from './model'
@@ -70,7 +70,7 @@ export function createAuthMiddleware(
 ) {
 
     const TABLE_USER = 'users'
-    const TABLE_FORGOTPASSWORD = "forgotPassword"
+    const TABLE_FORGOTPASSWORD = "forgot_password"
     const PASSWORD_HASH_LEN = 20
     const usePlainTextPassword = config?.password?.usePlainText || false
 
@@ -118,6 +118,8 @@ export function createAuthMiddleware(
 
     skipAuthRoutes.push('/auth/login')
     skipAuthRoutes.push('/auth/google/*')
+    skipAuthRoutes.push('/auth/changepassword')
+    skipAuthRoutes.push('/auth/forgotpassword')
     if (config.password) {
         skipAuthRoutes.push('/auth/signup')
     }
@@ -220,6 +222,8 @@ export function createAuthMiddleware(
         return (saveUser && await saveUser(user, req, res))
     }
 
+
+    //returns user data
     authApp.get('/auth/me', async (req, res) => {
         //@ts-ignore
         let user = req.session?.user
@@ -231,6 +235,8 @@ export function createAuthMiddleware(
         }
         res.send(ApiResponse.ok(user))
     })
+
+    // if password login is selected, then create signup api
     if (config.password) {
         authApp.post('/auth/signup', async (req, res) => {
             //@ts-ignore
@@ -263,6 +269,8 @@ export function createAuthMiddleware(
                     res.send(ApiResponse.notOk(e.message))
             })
         })
+
+        //login API
         authApp.post('/auth/login', async (req, res) => {
             const [email, password, id] = [req.body.email, req.body.password, req.body.id]
             //@ts-ignore
@@ -285,6 +293,7 @@ export function createAuthMiddleware(
             }
         })
 
+        // forgot password API
         authApp.post('/auth/forgotpassword', async (req,res) => {
         const email = req.body.email
         let validateEmail  = Utils.validateEmail(email)
@@ -292,28 +301,68 @@ export function createAuthMiddleware(
             res.status(400).send(ApiResponse.notOk('Invalid Email'))
             return
            }
-         const secrete = Utils.generateRandomID(20)
+         const secret = Utils.generateRandomID(20)
          const host = req.get('host') || req.hostname;
-         const link = host+config.password?.changePasswordPath+'?secret='+secret;
-         const user: AuthUser = await db.getOne(TABLE_USER,{email:email}) //check for email in db and returns whole user row
+         const link = 'http://'+host+config.password?.changePasswordPath+'?secret='+secret;
+         const user: AuthUser = await db.getOne(TABLE_USER,{email:email}) //check for email in db and returns whole user row, right side email is value and left is column name
         
          if(user==undefined){
             return res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
          }
-         const Object = { 
+         const emailObj = { 
             id: user.id,           
             email: email,
             link: link,
-            linkExp: Date.now()+10*60*1000
+            linkExp: Date.now()+10*60*1000,
+            secret
         }
-         await db.insert(TABLE_FORGOTPASSWORD,Object)
-         res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
+         await db.insert(TABLE_FORGOTPASSWORD,emailObj)
+         res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "+secret))
 
          //send email
-         
+         config.mailer?.sendTextEmail(email,"Reset Password",emailObj.link)
         })
+
+    //change password API
+    authApp.post('/auth/changepassword',async(req,res)=>{
+
+        try{
+        const newPassword = Utils.generateHash(req.body.newPassword, PASSWORD_HASH_LEN)        
+        const secretKey = req.body.secret
+        
+        const forgotpassword:ForgotPassword= await db.getOne(TABLE_FORGOTPASSWORD,{secret:secretKey})
+
+        if(!forgotpassword){
+            res.status(400).send(ApiResponse.notOk("Oops ! Looks like the password reset link has expired. Please request a new one"))
+            return
+        }
+        const userId = forgotpassword.id
+
+        if (checkLinkExpiry(forgotpassword)){
+            const result = await db.update(TABLE_USER,{id:userId},{password:newPassword})   
+            res.send(ApiResponse.ok("Password updated successfully !"))
+            await db.delete(TABLE_FORGOTPASSWORD,{id:userId})
+        }
+        else{
+            await db.delete(TABLE_FORGOTPASSWORD,{id:userId})
+            res.status(400).send(ApiResponse.notOk("Password link expired, Request a new one"))
+        }
+    }
+    catch(e:any){
+        res.status(500).send(ApiResponse.notOk("Internal Server Error"))
+    }
+       
+    })
+
+    function checkLinkExpiry(forgotpassword:ForgotPassword):boolean{
+        return parseInt(forgotpassword.linkExp) >= Date.now()       
+
     }
 
+
+    }
+
+//---------------- if sigup selected using google ----------------
     function addAccessToken(res: Response, token: string) {
         res.cookie('access_token', token)
         res.header('access_token', token)
