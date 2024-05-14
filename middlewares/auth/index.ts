@@ -317,10 +317,10 @@ export function createAuthMiddleware(
             secret
         }
          await db.insert(TABLE_FORGOTPASSWORD,emailObj)
-         res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "+secret))
+         res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
 
          //send email
-         config.mailer?.sendTextEmail(email,"Reset Password",emailObj.link)
+        //  config.mailer?.sendTextEmail(email,"Reset Password",emailObj.link)
         })
 
     //change password API
@@ -339,7 +339,7 @@ export function createAuthMiddleware(
         const userId = forgotpassword.id
 
         if (checkLinkExpiry(forgotpassword)){
-            const result = await db.update(TABLE_USER,{id:userId},{password:newPassword})   
+            await db.update(TABLE_USER,{id:userId},{password:newPassword})   
             res.send(ApiResponse.ok("Password updated successfully !"))
             await db.delete(TABLE_FORGOTPASSWORD,{id:userId})
         }
