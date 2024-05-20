@@ -320,7 +320,7 @@ export function createAuthMiddleware(
          res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
 
          //send email
-        //  config.mailer?.sendTextEmail(email,"Reset Password",emailObj.link)
+         config.mailer?.sendTextEmail(email,"Reset Password",emailObj.link)
         })
 
     //change password API
