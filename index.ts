@@ -17,6 +17,7 @@ export { Themes } from './models/media/Themes'
 export * from './models/scheduler/Schedule'
 export * from './utils/Auditlog'
 export * from './utils/ChromeCluster'
+export * from './utils/Vault'
 export * from './middlewares/auth/index'
 
 import FFMpegUtils from "./utils/FFMpegUtils"

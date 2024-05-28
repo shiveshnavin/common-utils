@@ -432,6 +432,13 @@ export class Utils {
         }
     }
 
+    public static existsFileSync(path) {
+        if (!fs.existsSync(path)) {
+            return false
+        }
+        return true
+    }
+
     public static getFullUrlFromRequest(req) {
         const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
         return url;
