@@ -302,8 +302,7 @@ export function createAuthMiddleware(
             return
            }
          const secret = Utils.generateRandomID(20)
-         const host1 = req.get('host') || req.hostname;
-         const host = "localhost:8081"
+         const host = req.get('host') || req.hostname;
          const link = 'http://'+host+config.password?.changePasswordPath+'?secret='+secret;
          const user: AuthUser = await db.getOne(TABLE_USER,{email:email}) //check for email in db and returns whole user row, right side email is value and left is column name
         
