@@ -705,4 +705,13 @@ export class Utils {
         }
         return left + right;
     }
+
+    public static validateEmail(email:String){
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+       return emailRegex.test(email)       
+
+    }
+
+
+
 }

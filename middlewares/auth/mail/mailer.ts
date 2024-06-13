@@ -75,7 +75,6 @@ export class Mailer {
         };
         //@ts-ignore
         var mailresult = await this.emailTransporter.sendMail(mailOptions);
-        console.log('mail sent to: ', to)
     }
 
     async sendWelcomeMail(to: string) {

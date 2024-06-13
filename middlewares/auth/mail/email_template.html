@@ -14,10 +14,10 @@ src = "https://yoloplaysrv.firebaseapp.com/images/logo.png" />
 
         < !--- Email body-- ->
             <div class="email-body" style = "padding:20px" >
-                <p>{{ body }}</p>
+                <p>{{body}}</p>
                     <p>
       If you have any questions / complaints or would like to provide your valuable feedback / feature requests please don't
-hesitate in reaching out to us at { { email } } <br></p>
+hesitate in reaching out to us at {{email}} <br></p>
     < /div>
     < !--- /Email body--->
 
@@ -25,8 +25,8 @@ hesitate in reaching out to us at { { email } } <br></p>
     < !--- Company info-- ->
         <div  class="email-companyinfo"
 style = "color:black;max-width: 500px; background: #f0f0f0; font-size: 12px; margin: 0 auto; overflow: hidden; text-align: center;" >
-    <p>© { { appname } } 2021. All rights reserved.< br >
-        <a href="{{host}}" target = "_blank" > {{ companyname }}</a><br>
+    <p>© {{appname}} 2021. All rights reserved.< br >
+        <a href="{{host}}" target = "_blank" > {{companyname}}</a><br>
             < a href = "{{privacy}}" target = "_blank" style = "font-size: 8px" > Privacy Policy < /a> |
                 < a href = "{{toc}}" target = "_blank" style = "font-size: 8px" > Terms and Conditions < /a>
 
