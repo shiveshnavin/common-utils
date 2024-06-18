@@ -270,6 +270,9 @@ export function createAuthMiddleware(
     authApp.get('/auth/login', async (req, res, next) => {
         res.send(LoginPageHtml)
     })
+    authApp.get('/auth/signout', async (req, res, next) => {
+        handleUnauthenticatedRequest(401, 'Logged out', req, res, next)
+    })
     // if password login is selected, then create signup api
     if (config.password) {
         authApp.post('/auth/signup', async (req, res, next) => {
