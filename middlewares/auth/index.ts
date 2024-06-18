@@ -67,15 +67,12 @@ export function createAuthMiddleware(
             changePasswordPath: "/changepassword"
         }
     },
-    handleUnauthenticatedRequest?: (
+    handleUnauthenticatedRequest: (
         status: number,
         reason: string,
         req: Request,
         res: Response,
-        next: Function) => void
-) {
-    if (!handleUnauthenticatedRequest) {
-        handleUnauthenticatedRequest = (
+        next: Function) => void = (
             status: number,
             reason: string,
             req: Request,
@@ -83,7 +80,7 @@ export function createAuthMiddleware(
             next: Function) => {
             res.status(status).send(ApiResponse.notOk(reason))
         }
-    }
+) {
     const TABLE_USER = 'users'
     const TABLE_FORGOTPASSWORD = "forgot_password"
     const PASSWORD_HASH_LEN = 20
