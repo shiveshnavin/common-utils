@@ -89,6 +89,15 @@ export function createAuthMiddleware(
     if (!db) {
         throw new Error('db must not be non-null')
     }
+    const sampleUser: AuthUser = {
+        avatar: 'stringlarge',
+        email: 'stringsmall',
+        name: 'string',
+        access_token: 'stringlarge',
+        id: 'string',
+        password: 'string'
+    }
+    db.create(TABLE_USER, sampleUser)
     if (!config.mailer) {
         let MailConfig = Utils.readFileToObject(path.join(__dirname, '../../../common-creds/semibit/mail.json'))
 
