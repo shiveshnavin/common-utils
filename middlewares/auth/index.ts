@@ -81,7 +81,7 @@ export function createAuthMiddleware(
             res.status(status).send(ApiResponse.notOk(reason))
         }
 ) {
-    const TABLE_USER = 'users'
+    const TABLE_USER = 'auth_users'
     const TABLE_FORGOTPASSWORD = "forgot_password"
     const PASSWORD_HASH_LEN = 20
     const usePlainTextPassword = config?.password?.usePlainText || false
