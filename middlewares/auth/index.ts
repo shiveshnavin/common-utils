@@ -79,7 +79,8 @@ export function createAuthMiddleware(
             status: number,
             reason: string,
             req: Request,
-            res: Response) => {
+            res: Response,
+            next: Function) => {
             res.status(status).send(ApiResponse.notOk(reason))
         }
     }
