@@ -20,6 +20,7 @@
   "include": [
     "index.ts",
     "models/**/*",
-    "utils/**/*"
+    "utils/**/*",
+    "middlewares/**/*.html", "middlewares/auth/login.html.ts",
   ]
 }

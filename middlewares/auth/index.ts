@@ -15,6 +15,7 @@ import { Mailer } from './mail/mailer'
 //@ts-ignore
 import cookies from 'cookie-parser'
 import path from 'path'
+import LoginPage from './login.html'
 
 export * from './mail/mailer'
 export * from './model'
@@ -22,14 +23,14 @@ export * from './model'
 export function generateUserJwt(
     user: AuthUser,
     secret: string,
-    expiresInSec: string = "7200s") {
+    expiresInSec: number = 7200) {
     if (typeof user == 'object')
         user = JSON.parse(JSON.stringify(user))
-    return jwt.sign(user, secret, { expiresIn: expiresInSec, algorithm: 'HS256' })
+    return jwt.sign(user, secret, { expiresIn: `${expiresInSec}s`, algorithm: 'HS256' })
 }
 
 export interface AuthMethodConfig {
-    expiresInSec: string,
+    expiresInSec: number,
     mailer?: Mailer,
     password?: {
         changePasswordPath: string,
@@ -61,7 +62,7 @@ export function createAuthMiddleware(
     saveUser?: (user: AuthUser, req: any, res: any) => Promise<AuthUser>,
     logLevel: 0 | 1 | 2 | 3 | 4 = 0,
     config: AuthMethodConfig = {
-        expiresInSec: "7200s",
+        expiresInSec: 7200,
         password: {
             usePlainText: false,
             changePasswordPath: "/changepassword"
@@ -92,10 +93,10 @@ export function createAuthMiddleware(
     const sampleUser: AuthUser = {
         avatar: 'stringlarge',
         email: 'stringsmall',
-        name: 'string',
+        name: 'stringsmall',
         access_token: 'stringlarge',
-        id: 'string',
-        password: 'string'
+        id: 'stringsmall',
+        password: 'stringsmall'
     }
     db.create(TABLE_USER, sampleUser)
     if (!config.mailer) {
@@ -113,9 +114,11 @@ export function createAuthMiddleware(
     authApp.use(cookies())
 
     let secret = Utils.getKeySync('auth.secret')
+    let appname = Utils.getKeySync('appname') || 'Auth'
+
     if (!secret) {
         secret = Utils.generateRandomID()
-        Utils.logPlain(`"auth.secret" used by jwt signing and session signing not found in config.json. Using random: ${secret}`)
+        Utils.logPlain(`"auth.secret" which is used for jwt signing and session signing is not found in config.json. Using random: ${secret}`)
     }
 
     function isSessionInitialized() {
@@ -165,8 +168,14 @@ export function createAuthMiddleware(
                 }
                 //@ts-ignore
                 req.session.user = user
-                res.cookie('access_token', getAccessTokenFromHeader(req))
-                res.header('Set-Cookie', `access_token=${getAccessTokenFromHeader(req)}`)
+                const accessToken = getAccessTokenFromHeader(req)
+                res.cookie('access_token', accessToken, {
+                    maxAge: config.expiresInSec * 1000,
+                    httpOnly: true,
+                    secure: false,
+                    path: '/',
+                });
+                res.setHeader('Set-Cookie', `access_token=${accessToken}; Expires=${new Date(Date.now() + config.expiresInSec * 1000).toUTCString()}; Secure; Path=/`);
                 next()
             } else {
                 return handleUnauthenticatedRequest(401, `Missing authorization in headers`, req, res, next)
@@ -257,6 +266,10 @@ export function createAuthMiddleware(
         res.send(ApiResponse.ok(user))
     })
 
+    const LoginPageHtml = LoginPage(appname)
+    authApp.get('/auth/login', async (req, res, next) => {
+        res.send(LoginPageHtml)
+    })
     // if password login is selected, then create signup api
     if (config.password) {
         authApp.post('/auth/signup', async (req, res, next) => {
