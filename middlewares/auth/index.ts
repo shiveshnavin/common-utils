@@ -296,6 +296,7 @@ export function createAuthMiddleware(
                 let token = generateUserJwt(user!, secret, config.expiresInSec)
                 addAccessToken(res, token)
                 user!.access_token = token
+                delete user?.password
                 if (!res.headersSent)
                     res.send(ApiResponse.ok(user))
             }).catch((e) => {
@@ -318,7 +319,10 @@ export function createAuthMiddleware(
                 if (user.password == hashPassword) {
                     let token = generateUserJwt(user!, secret, config.expiresInSec)
                     addAccessToken(res, token)
-                    res.send(ApiResponse.ok(user))
+                    if (req.query.returnUri)
+                        res.redirect(req.query.returnUri as string)
+                    else
+                        res.send(ApiResponse.ok(user))
                 }
                 else
                     return handleUnauthenticatedRequest(401, 'User not found or the credentials are incorrect', req, res, next)
