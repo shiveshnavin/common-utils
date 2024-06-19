@@ -1,7 +1,7 @@
-export class ApiResponse {
+export class ApiResponse<T extends any> {
     status: 'success' | 'failed'
     message?: string
-    data?: any
+    data?: T
     constructor(
         status: 'success' | 'failed' = "success",
         message?: string,
@@ -17,7 +17,6 @@ export class ApiResponse {
         return new ApiResponse("failed", message)
     }
 }
-
 
 export interface AuthUser {
     name: string,
