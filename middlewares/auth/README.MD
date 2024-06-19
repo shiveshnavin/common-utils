@@ -15,15 +15,7 @@ app.use(
   createAuthMiddleware(
     db,
     app,
-    [
-      "/upstocks*",
-      "/",
-      "/graph",
-      "_expo*",
-      "assets*",
-      "favicon.ico",
-      ...uiRoutes,
-    ],
+    ["_expo*", "assets*", "favicon.ico"],
     sessionMiddleware,
     undefined, // override getUser function
     undefined, // override saveUser function
@@ -39,7 +31,7 @@ app.use(
       if (req.originalUrl?.indexOf("/auth/login") > -1) {
         res.redirect(req.originalUrl);
       } else {
-        res.redirect("/pipelane/auth/login?returnUri=" + returnUri);
+        res.redirect("/auth/login?returnUri=" + returnUri);
       }
     }
   )
