@@ -322,8 +322,8 @@ export function createAuthMiddleware(
                 if (user.password == hashPassword) {
                     let token = generateUserJwt(user!, secret, config.expiresInSec)
                     addAccessToken(res, token)
-                    if (req.query.returnUri)
-                        res.redirect(req.query.returnUri as string)
+                    if (req.query.returnUrl)
+                        res.redirect(req.query.returnUrl as string)
                     else
                         res.send(ApiResponse.ok(user))
                 }
