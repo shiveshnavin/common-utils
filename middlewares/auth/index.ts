@@ -343,7 +343,8 @@ export function createAuthMiddleware(
                 return
             }
             const secret = Utils.generateRandomID(20)
-            const host = req.get('host') || req.hostname;
+            // const host = req.get('host') || req.hostname;
+            const host = 'localhost:8081' 
             const link = 'http://' + host + config.password?.changePasswordPath + '?secret=' + secret;
             const user: AuthUser = await db.getOne(TABLE_USER, { email: email }) //check for email in db and returns whole user row, right side email is value and left is column name
 
@@ -352,16 +353,20 @@ export function createAuthMiddleware(
             }
             const emailObj = {
                 id: user.id,
-                email: email,
+                email: email,   
                 link: link,
                 linkExp: Date.now() + 10 * 60 * 1000,
                 secret
             }
+
+            //inserting into Database - forgot password
             await db.insert(TABLE_FORGOTPASSWORD, emailObj)
+
             res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
 
             //send email
-            config.mailer?.sendTextEmail(email, "Reset Password", emailObj.link)
+            config.mailer?.sendTextEmail(email, "Reset Password", emailObj.link,user.name)
+
         })
 
         //change password API

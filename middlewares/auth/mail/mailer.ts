@@ -46,12 +46,13 @@ export class Mailer {
         });
     }
 
-    getEmailTemplate() {
+    getEmailTemplate(username?:string) {
         if (this.emailTemplateHtml)
             return this.emailTemplateHtml
         this.emailTemplateHtml = fs.readFileSync(path.join(__dirname, './email_template.html')).toString();
         this.emailTemplateHtml = this.emailTemplateHtml
             .replaceAll("{{email}}", this.config.email)
+            .replaceAll("{{username}}",username)
             .replaceAll("{{appname}}", this.config.app)
             .replaceAll("{{host}}", this.config.website)
             .replaceAll("{{companyname}}", this.config.company)
@@ -59,22 +60,26 @@ export class Mailer {
             .replaceAll("{{toc}}", this.config.website + "/privacy-policy.html")
             .replaceAll("{{instagram}}", this.config.instagram)
             .replaceAll("{{cdn}}", this.config.cdn)
+            
 
         return this.emailTemplateHtml;
     }
 
-    async sendTextEmail(to: string, title: string, body: string, cc?: string) {
-        let htmlBody = this.getEmailTemplate();
+    async sendTextEmail(to: string, title: string, reset_link: string, username?: string,cc?: string) {
+        let htmlBody = this.getEmailTemplate(username);
 
         let mailOptions = {
             from: `'${this.config.senderName}' <${this.config.email}>`,
             to: to,
             subject: title,
-            html: htmlBody.replace("{{body}}", replaceAll(body, '\n', '<br>')),
+            html: htmlBody.replace("{{reset_link}}", replaceAll(reset_link, '\n', '<br>')),
             cc: cc
         };
         //@ts-ignore
+        //send mail using below code
         var mailresult = await this.emailTransporter.sendMail(mailOptions);
+
+        // fs.writeFileSync("html.html",mailOptions.html)
     }
 
     async sendWelcomeMail(to: string) {
