@@ -59,11 +59,12 @@ export class Mailer {
             .replaceAll("{{toc}}", this.config.website + "/privacy-policy.html")
             .replaceAll("{{instagram}}", this.config.instagram)
             .replaceAll("{{cdn}}", this.config.cdn)
+            
 
         return this.emailTemplateHtml;
     }
 
-    async sendTextEmail(to: string, title: string, body: string, cc?: string) {
+    async sendTextEmail(to: string, title: string, body: string,cc?: string) {
         let htmlBody = this.getEmailTemplate();
 
         let mailOptions = {
@@ -74,7 +75,10 @@ export class Mailer {
             cc: cc
         };
         //@ts-ignore
+        //send mail using below code
         var mailresult = await this.emailTransporter.sendMail(mailOptions);
+
+        // fs.writeFileSync("html.html",mailOptions.html)
     }
 
     async sendWelcomeMail(to: string) {
@@ -89,7 +93,12 @@ export class Mailer {
 
         await this.sendTextEmail(to,
             `Reset ${this.config.app} Password link`,
-            `Hey ${toName} ! \n Please follow the link to reset your password. The link will expire in 24 hrs . ${link}`)
+            `<p>Dear ${toName},
+            We received request to reset your password. Click the link below to reset it.
+            <a href="${link}" class="button">Reset Password</a>
+            If you did not request a password reset, please ignore this email or contact support if you have questions.
+            For further assistance, visit <a href="${this.config.website}" target="_blank">help center</a></p>
+            `)
     }
 
 }
