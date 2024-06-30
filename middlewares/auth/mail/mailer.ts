@@ -46,13 +46,12 @@ export class Mailer {
         });
     }
 
-    getEmailTemplate(username?:string) {
+    getEmailTemplate() {
         if (this.emailTemplateHtml)
             return this.emailTemplateHtml
         this.emailTemplateHtml = fs.readFileSync(path.join(__dirname, './email_template.html')).toString();
         this.emailTemplateHtml = this.emailTemplateHtml
             .replaceAll("{{email}}", this.config.email)
-            .replaceAll("{{username}}",username)
             .replaceAll("{{appname}}", this.config.app)
             .replaceAll("{{host}}", this.config.website)
             .replaceAll("{{companyname}}", this.config.company)
@@ -65,14 +64,14 @@ export class Mailer {
         return this.emailTemplateHtml;
     }
 
-    async sendTextEmail(to: string, title: string, reset_link: string, username?: string,cc?: string) {
-        let htmlBody = this.getEmailTemplate(username);
+    async sendTextEmail(to: string, title: string, body: string,cc?: string) {
+        let htmlBody = this.getEmailTemplate();
 
         let mailOptions = {
             from: `'${this.config.senderName}' <${this.config.email}>`,
             to: to,
             subject: title,
-            html: htmlBody.replace("{{reset_link}}", replaceAll(reset_link, '\n', '<br>')),
+            html: htmlBody.replace("{{body}}", replaceAll(body, '\n', '<br>')),
             cc: cc
         };
         //@ts-ignore
@@ -94,7 +93,12 @@ export class Mailer {
 
         await this.sendTextEmail(to,
             `Reset ${this.config.app} Password link`,
-            `Hey ${toName} ! \n Please follow the link to reset your password. The link will expire in 24 hrs . ${link}`)
+            `<p>Dear ${toName},
+            We received request to reset your password. Click the link below to reset it.
+            <a href="${link}" class="button">Reset Password</a>
+            If you did not request a password reset, please ignore this email or contact support if you have questions.
+            For further assistance, visit <a href="${this.config.website}" target="_blank">help center</a></p>
+            `)
     }
 
 }
