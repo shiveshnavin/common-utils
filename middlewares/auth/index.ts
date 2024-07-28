@@ -20,13 +20,24 @@ import LoginPage from './login.html'
 export * from './mail/mailer'
 export * from './model'
 
+export type JwtPayloadOptions = {
+    iss?: string,
+    sub?: string,
+    aud?: string,
+    scope?: string,
+}
+
+function createJwtPayload(obj1: AuthUser, obj2: JwtPayloadOptions = {}) {
+    return Object.assign(obj2, obj1)
+}
+
 export function generateUserJwt(
-    user: AuthUser,
+    payload: AuthUser & JwtPayloadOptions,
     secret: string,
     expiresInSec: number = 7200) {
-    if (typeof user == 'object')
-        user = JSON.parse(JSON.stringify(user))
-    return jwt.sign(user, secret, { expiresIn: `${expiresInSec}s`, algorithm: 'HS256' })
+    if (typeof payload == 'object')
+        payload = JSON.parse(JSON.stringify(payload))
+    return jwt.sign(payload, secret, { expiresIn: `${expiresInSec}s`, algorithm: 'HS256' })
 }
 
 export interface AuthMethodConfig {
@@ -50,7 +61,7 @@ export interface AuthMethodConfig {
  * @param getUser 
  * @param saveUser 
  * @param logLevel 0 | 1 | 2 | 3 | 4
- * @param config 
+ * @param config if your app's config.json dosent contain auth.secret but you are passing config.google.creds.private_key then the private_key will be used to sign the jwts
  * @returns 
  */
 export function createAuthMiddleware(
@@ -113,7 +124,7 @@ export function createAuthMiddleware(
     const authApp = express.Router()
     authApp.use(cookies())
 
-    let secret = Utils.getKeySync('auth.secret')
+    let secret = Utils.getKeySync('auth.secret') || config.google?.creds?.web?.private_key
     let appname = Utils.getKeySync('appname') || 'Auth'
 
     if (!secret) {
@@ -353,7 +364,7 @@ export function createAuthMiddleware(
             }
             const emailObj = {
                 id: user.id,
-                email: email,   
+                email: email,
                 link: link,
                 linkExp: Date.now() + 10 * 60 * 1000,
                 secret
@@ -365,7 +376,7 @@ export function createAuthMiddleware(
             res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
 
             //send email
-            config.mailer?.sendResetPasswordMail(email,user.name, emailObj.link)
+            config.mailer?.sendResetPasswordMail(email, user.name, emailObj.link)
 
         })
 

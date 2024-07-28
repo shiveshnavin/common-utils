@@ -7,12 +7,14 @@ import jwt from 'jsonwebtoken'
 import { AuthUser } from './model';
 
 export type GoogleSigninConfig = {
-    "web": {
-        "client_id": string,
-        "project_id": string,
-        "client_secret": string,
-        "redirect_uris": string[],
-        "scopes": string[]
+    web: {
+        client_id: string,
+        project_id: string,
+        client_secret: string,
+        redirect_uris: string[],
+        scopes: string[],
+
+        private_key?: string
     }
 }
 
