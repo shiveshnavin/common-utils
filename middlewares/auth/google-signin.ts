@@ -45,16 +45,15 @@ export function GoogleSigninMiddleware(
         return tokenResp
     }
 
-    function generateGoogleAuthUrl(uniqueCode: string, callbackUrl: string) {
+    function generateGoogleAuthUrl(authCallback: string, signin_callback?: string) {
         let scopesString = scopes.join(" ")
         let authUrl = oAuth2Client.generateAuthUrl({
             access_type: "offline",
             scope: scopesString,
             include_granted_scopes: true,
-            redirect_uri: callbackUrl,
+            redirect_uri: authCallback,
             state: Utils.encodeBase64(JSON.stringify({
-                project_id: project_id,
-                uniqueCode: uniqueCode
+                signin_callback
             }))
         });
         return authUrl
@@ -64,18 +63,20 @@ export function GoogleSigninMiddleware(
     const router = express.Router()
 
     router.get('/signin', (req, res) => {
+        const cbUrl = req.query.callback_url || req.query.signin_callback || req.query.returnUrl
         if (req.query.callback_url) {
             //@ts-ignore
-            req.session.signin_callback = req.query.callback_url
+            req.session.signin_callback = cbUrl
         }
-        let googleAuthUrl = generateGoogleAuthUrl(Utils.generateRandomID(), callbackUrl)
+        let googleAuthUrl = generateGoogleAuthUrl(callbackUrl, cbUrl as string)
         res.redirect(googleAuthUrl)
     })
 
     router.get('/callback', async (req, res) => {
         let code = req.query.code as string
+        let state = JSON.parse(Utils.decodeBase64(req.query.state as string || '') || '{}')
         //@ts-ignore
-        const returnUrl = req.session.signin_callback || default_signin_callback
+        const returnUrl = state.signin_callback || req.session.signin_callback || default_signin_callback
         try {
             let tokenresp = await exchangeGoogleCode(code)
             let idToken = tokenresp.tokens.id_token
