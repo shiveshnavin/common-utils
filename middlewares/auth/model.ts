@@ -24,7 +24,8 @@ export interface AuthUser {
     email: string,
     password?: string,
     id?: string,
-    access_token?: string
+    access_token?: string,
+    extrajson?: string
 }
 
 export interface ForgotPassword {
@@ -34,5 +35,4 @@ export interface ForgotPassword {
     linkGen: string
     linkExp: string
     secret: string
-  }
-  
+}
