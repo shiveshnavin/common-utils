@@ -27,10 +27,6 @@ export type JwtPayloadOptions = {
     scope?: string,
 }
 
-function createJwtPayload(obj1: AuthUser, obj2: JwtPayloadOptions = {}) {
-    return Object.assign(obj2, obj1)
-}
-
 export function generateUserJwt(
     payload: AuthUser & JwtPayloadOptions,
     secret: string,

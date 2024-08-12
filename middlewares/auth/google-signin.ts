@@ -31,7 +31,7 @@ export function GoogleSigninMiddleware(
     saveAndRedirectUser: (user: AuthUser, returnUrl: string, req: any, res: any) => void,
     default_signin_callback: string) {
 
-    let { client_id, client_secret, project_id, scopes, redirect_uris } = credsJson.web
+    let { client_id, client_secret, scopes, redirect_uris } = credsJson.web
     let callbackUrl = process.env.NODE_ENV == 'development' ? redirect_uris[redirect_uris.length - 1] : redirect_uris[0]
 
     const oAuth2Client = new auth.OAuth2(
