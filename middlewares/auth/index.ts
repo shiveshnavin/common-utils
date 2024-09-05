@@ -220,6 +220,12 @@ export function createAuthMiddleware(
 
     saveUser = saveUser || async function (user: AuthUser, _req: Express.Request, _res: Response): Promise<AuthUser> {
         await db.insert(TABLE_USER, user)
+            .catch(e => {
+                if (e.message.includes("ER_DUP_ENTRY")) {
+                    return db.update(TABLE_USER, { id: user.id }, user)
+                }
+                console.error(`Fatal Error saving user ${user.id} ` + e.message)
+            })
         delete user.password
         return user
     }
