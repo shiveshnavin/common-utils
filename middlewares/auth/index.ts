@@ -107,15 +107,18 @@ export function createAuthMiddleware(
     }
     db.create(TABLE_USER, sampleUser)
     if (!config.mailer) {
-        let MailConfig = Utils.readFileToObject(path.join(__dirname, '../../../common-creds/semibit/mail.json'))
-
-        config.mailer = new Mailer({
-            ...MailConfig,
-            app: 'Semibit',
-            company: 'Semibit Technologies',
-            instagram: "https://instagram.com/semibitin",
-            website: "https://www.semibit.in",
-        })
+        let MailConfig = Utils.readFileToObject('mail.json')
+        if (!MailConfig) {
+            console.warn('Mail config not found, mails wont be sent. Ensure passing config.mailer or create a mail.json in the project root folder')
+        }
+        else
+            config.mailer = new Mailer({
+                ...MailConfig,
+                app: 'Semibit',
+                company: 'Semibit Technologies',
+                instagram: "https://instagram.com/semibitin",
+                website: "https://www.semibit.in",
+            })
     }
     const authApp = express.Router()
     authApp.use(cookies())

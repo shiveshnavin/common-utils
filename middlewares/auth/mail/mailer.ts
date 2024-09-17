@@ -18,6 +18,9 @@ export type MailerConfig = {
     app?: string;
     company?: string;
     website?: string;
+    privacy?: string;
+    logo?: string;
+    terms?: string;
     instagram?: string;
     cdn?: string;
 }
@@ -53,32 +56,35 @@ export class Mailer {
         this.emailTemplateHtml = this.emailTemplateHtml
             .replaceAll("{{email}}", this.config.email)
             .replaceAll("{{appname}}", this.config.app)
+            .replaceAll("{{logo}}", this.config.logo)
             .replaceAll("{{host}}", this.config.website)
             .replaceAll("{{companyname}}", this.config.company)
-            .replaceAll("{{privacy}}", this.config.website + "/toc.html")
-            .replaceAll("{{toc}}", this.config.website + "/privacy-policy.html")
+            .replaceAll("{{privacy}}", this.config.privacy || (this.config.website + "/toc.html"))
+            .replaceAll("{{toc}}", this.config.terms || (this.config.website + "/privacy-policy.html"))
             .replaceAll("{{instagram}}", this.config.instagram)
             .replaceAll("{{cdn}}", this.config.cdn)
-            
+
+        this.emailTemplateHtml = this.emailTemplateHtml.split("{{body}}")
 
         return this.emailTemplateHtml;
     }
 
-    async sendTextEmail(to: string, title: string, body: string,cc?: string) {
-        let htmlBody = this.getEmailTemplate();
+    async sendTextEmail(to: string, title: string, body: string, cc?: string) {
+        let htmlBody = this.getEmailTemplate().join(replaceAll(body, '\n', '<br>'));
 
         let mailOptions = {
             from: `'${this.config.senderName}' <${this.config.email}>`,
             to: to,
             subject: title,
-            html: htmlBody.replace("{{body}}", replaceAll(body, '\n', '<br>')),
+            html: htmlBody,
             cc: cc
         };
-        //@ts-ignore
-        //send mail using below code
-        var mailresult = await this.emailTransporter.sendMail(mailOptions);
 
-        // fs.writeFileSync("html.html",mailOptions.html)
+        //send mail using below code
+        await this.emailTransporter.sendMail(mailOptions).catch(err => {
+            console.log('Mail send failed', err)
+        });
+
     }
 
     async sendWelcomeMail(to: string) {
@@ -93,11 +99,11 @@ export class Mailer {
 
         await this.sendTextEmail(to,
             `Reset ${this.config.app} Password link`,
-            `<p>Dear ${toName},
+            `<p>Dear ${toName},<br>
             We received request to reset your password. Click the link below to reset it.
             <a href="${link}" class="button">Reset Password</a>
-            If you did not request a password reset, please ignore this email or contact support if you have questions.
-            For further assistance, visit <a href="${this.config.website}" target="_blank">help center</a></p>
+            If you did not request a password reset, please immediately report this email to us or contact support if you have questions.
+            For further assistance, please reach out to via <a href="${this.config.website}" target="_blank">our website</a></p>
             `)
     }
 
