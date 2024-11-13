@@ -1,10 +1,8 @@
 //@ts-nocheck
 import { exec } from 'child_process';
-import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg';
 import { spawn } from 'child_process';
 import { parseArgsStringToArgv } from 'string-argv';
 import * as ffmpeg from 'fluent-ffmpeg';
-import { path as ffprobePath } from '@ffprobe-installer/ffprobe';
 
 function execute(cmd: String, onLog?: Function) {
     if (!onLog)
@@ -17,6 +15,7 @@ function execute(cmd: String, onLog?: Function) {
 
     return new Promise((resolve, reject) => {
 
+        const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path
         const ffmpeg = spawn(ffmpegPath, args);
         var output = ""
         ffmpeg.stdout.on('data', function (chunk) {
