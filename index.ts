@@ -19,6 +19,7 @@ export * from './utils/Auditlog'
 export * from './utils/ChromeCluster'
 export * from './utils/Vault'
 export * from './middlewares/auth/index'
+export * from './utils/encrypt'
 
 import FFMpegUtils from "./utils/FFMpegUtils"
 

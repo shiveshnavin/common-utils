@@ -39,6 +39,7 @@ export function generateUserJwt(
 
 export interface AuthMethodConfig {
     expiresInSec: number,
+    encryptJwtInCallbackUrl?: (req: Request, token: string) => string, // Double encrypt JWT when passed in callback urls using this key (for googlesignin)
     mailer?: Mailer,
     password?: {
         changePasswordPath: string,
@@ -436,8 +437,13 @@ export function createAuthMiddleware(
             let loggedInUser = await signUpUser(user, req, res) as AuthUser
             if (!res.headersSent) {
                 let token = generateUserJwt(loggedInUser, secret, config.expiresInSec)
+
                 req.session.access_token = token
-                returnUrl = Utils.appendQueryParam(returnUrl, 'access_token', token)
+                if (config.encryptJwtInCallbackUrl) {
+                    returnUrl = Utils.appendQueryParam(returnUrl, 'access_token', config.encryptJwtInCallbackUrl(req, token))
+                } else {
+                    returnUrl = Utils.appendQueryParam(returnUrl, 'access_token', token)
+                }
                 addAccessToken(res, token)
                 res.redirect(returnUrl)
             }
