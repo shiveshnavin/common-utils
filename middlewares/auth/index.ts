@@ -14,7 +14,6 @@ import jwt from 'jsonwebtoken'
 import { Mailer } from './mail/mailer'
 //@ts-ignore
 import cookies from 'cookie-parser'
-import path from 'path'
 import LoginPage from './login.html'
 
 export * from './mail/mailer'
