@@ -1,4 +1,5 @@
 import express, { Express, Response, Request } from 'express'
+//@ts-ignore
 import { MultiDbORM } from 'multi-db-orm'
 import * as bodyParser from 'body-parser'
 //@ts-ignore

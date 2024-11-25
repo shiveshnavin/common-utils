@@ -20,6 +20,38 @@ interface ObjectWithText {
 
 var cacheConfig = {}
 export class Utils {
+
+
+    /**
+     * Processes an array of objects in parallel with a specified level of concurrency.
+     * @param {Array} items - The array of objects to process.
+     * @param {Function} runner - The function to run for each object. Should return a Promise.
+     * @param {number} parallelism - Number of parallel executions at a time.
+     * @returns {Promise<Array>} - Resolves with an array of results when all tasks are completed.
+     */
+    async  processInParallel(items, runner, parallelism) {
+        const results = [];
+        const executing = [];
+    
+        for (const item of items) {
+        const task = runner(item).then((result) => {
+            results.push(result);
+            executing.splice(executing.indexOf(task), 1); // Remove task from executing queue.
+        });
+    
+        executing.push(task);
+    
+        if (executing.length >= parallelism) {
+            await Promise.race(executing); // Wait for one of the tasks to complete.
+        }
+        }
+    
+        // Wait for the remaining tasks to complete.
+        await Promise.all(executing);
+    
+        return results;
+    }
+  
     public static startsWithAny(string, prefixes) {
         for (const prefix of prefixes) {
             if (string.startsWith(prefix)) {

@@ -62,7 +62,7 @@ export function GoogleSigninMiddleware(
 
     const router = express.Router()
 
-    router.get('/signin', (req, res) => {
+    router.get('/signin', (req:any, res:any) => {
         const cbUrl = req.query.callback_url || req.query.signin_callback || req.query.returnUrl
         if (req.query.callback_url) {
             //@ts-ignore
@@ -72,7 +72,7 @@ export function GoogleSigninMiddleware(
         res.redirect(googleAuthUrl)
     })
 
-    router.get('/callback', async (req, res) => {
+    router.get('/callback', async (req:any, res:any) => {
         let code = req.query.code as string
         let state = JSON.parse(Utils.decodeBase64(req.query.state as string || '') || '{}')
         //@ts-ignore
