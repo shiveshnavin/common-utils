@@ -29,15 +29,23 @@ export class Utils {
      * @param {number} parallelism - Number of parallel executions at a time.
      * @returns {Promise<Array>} - Resolves with an array of results when all tasks are completed.
      */
-    async  processInParallel(items, runner, parallelism) {
+    static async processInParallel(items, runner, parallelism) {
         const results = [];
         const executing = [];
     
         for (const item of items) {
         const task = runner(item).then((result) => {
-            results.push(result);
+            results.push({
+                item,
+                result
+            });
             executing.splice(executing.indexOf(task), 1); // Remove task from executing queue.
-        });
+        }).catch(e=>{
+            results.push({
+                item,
+                result: undefined
+            });
+        })
     
         executing.push(task);
     
