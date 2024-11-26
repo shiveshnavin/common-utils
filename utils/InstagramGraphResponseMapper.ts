@@ -48,8 +48,8 @@ export class InstagramGraphResponseMapper {
         }
         Object.assign(Target, Source)
         Target.media_count = Source.edge_owner_to_timeline_media?.count
-        Target.following_count = Source.edge_follow.count
-        Target.follower_count = Source.edge_followed_by.count
+        Target.following_count = Source.edge_follow?.count
+        Target.follower_count = Source.edge_followed_by?.count
         Target.account_type
         Target.hd_profile_pic_url_info = {
             url: Source.profile_pic_url_hd
@@ -87,9 +87,9 @@ export class InstagramGraphResponseMapper {
         Target.image_versions2 = {
             candidates: Source.display_resources?.map((dp: any) => {
                 return {
-                    width: dp.config_width,
-                    height: dp.config_height,
-                    url: dp.src
+                    width: dp?.config_width,
+                    height: dp?.config_height,
+                    url: dp?.src
                 }
             })
         }
@@ -104,8 +104,8 @@ export class InstagramGraphResponseMapper {
         }
 
         Target.user = Source.owner
-        Target.user.pk = Source.owner.id
-        Target.user.pk_id = Source.owner.id
+        Target.user.pk = Source.owner?.id
+        Target.user.pk_id = Source.owner?.id
 
         return Target
     }
