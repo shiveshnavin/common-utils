@@ -281,6 +281,7 @@ export function createAuthMiddleware(
         if (!user) {
             return handleUnauthenticatedRequest(401, 'Unauthorized', req, res, next)
         }
+        delete user.password
         res.send(ApiResponse.ok(user))
     })
 
@@ -340,6 +341,7 @@ export function createAuthMiddleware(
                 if (user.password == hashPassword) {
                     let token = generateUserJwt(user!, secret, config.expiresInSec)
                     addAccessToken(res, token)
+                    delete user.password
                     if (req.query.returnUrl)
                         res.redirect(req.query.returnUrl as string)
                     else
