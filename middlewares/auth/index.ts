@@ -107,7 +107,15 @@ export function createAuthMiddleware(
         id: 'stringsmall',
         password: 'stringsmall'
     }
-    db.create(TABLE_USER, sampleUser)
+    db.create(TABLE_USER, sampleUser).catch(e=>{
+        console.warn(
+          "auth-middleware",
+          "Error creating ",
+          TABLE_USER,
+          ".",
+          e.message
+        );
+    })
     if (!config.mailer) {
         let MailConfig = Utils.readFileToObject('mail.json')
         if (!MailConfig) {
