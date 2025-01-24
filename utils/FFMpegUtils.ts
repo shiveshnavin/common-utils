@@ -2,8 +2,8 @@
 import { exec } from 'child_process';
 import { spawn } from 'child_process';
 import { parseArgsStringToArgv } from 'string-argv';
-import * as ffmpeg from 'fluent-ffmpeg';
 
+var ffmpeg;
 function execute(cmd: String, onLog?: Function) {
     if (!onLog)
         onLog = console.log
@@ -47,6 +47,9 @@ async function joinAudios(filePaths, outputFileName) {
 }
 
 async function getDuration(pathOfAudio): Promise<number> {
+    if (!ffmpeg) {
+        ffmpeg = require('fluent-ffmpeg')
+    }
     let durationInSeconds = await new Promise((resolve, reject) => {
         ffmpeg.ffprobe(pathOfAudio, (err, metadata) => {
             if (err) {
@@ -81,7 +84,9 @@ function getMediaMetadata(pathToMedia): Promise<{
         fps
     }
 }> {
-
+    if (!ffmpeg) {
+        ffmpeg = require('fluent-ffmpeg')
+    }
     return new Promise((resolve, reject) => {
         ffmpeg.ffprobe(pathToMedia, (err, metadata) => {
             if (err) {

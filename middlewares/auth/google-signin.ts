@@ -1,11 +1,11 @@
 //@ts-ignore
-import { auth } from '@googleapis/drive';
 import { Utils } from '../../';
-import express from 'express'
+import express, { Router } from 'express'
 //@ts-ignore
 import jwt from 'jsonwebtoken'
 import { AuthUser } from './model';
 
+var auth;
 export type GoogleSigninConfig = {
     web: {
         client_id: string,
@@ -29,11 +29,13 @@ export type GoogleSigninConfig = {
 export function GoogleSigninMiddleware(
     credsJson: GoogleSigninConfig,
     saveAndRedirectUser: (user: AuthUser, returnUrl: string, req: any, res: any) => void,
-    default_signin_callback: string) {
+    default_signin_callback: string): Router {
 
     let { client_id, client_secret, scopes, redirect_uris } = credsJson.web
     let callbackUrl = process.env.NODE_ENV == 'development' ? redirect_uris[redirect_uris.length - 1] : redirect_uris[0]
-
+    if (!auth) {
+        auth = require('@googleapis/drive').auth
+    }
     const oAuth2Client = new auth.OAuth2(
         client_id,
         client_secret,
@@ -62,7 +64,7 @@ export function GoogleSigninMiddleware(
 
     const router = express.Router()
 
-    router.get('/signin', (req:any, res:any) => {
+    router.get('/signin', (req: any, res: any) => {
         const cbUrl = req.query.callback_url || req.query.signin_callback || req.query.returnUrl
         if (req.query.callback_url) {
             //@ts-ignore
@@ -72,7 +74,7 @@ export function GoogleSigninMiddleware(
         res.redirect(googleAuthUrl)
     })
 
-    router.get('/callback', async (req:any, res:any) => {
+    router.get('/callback', async (req: any, res: any) => {
         let code = req.query.code as string
         let state = JSON.parse(Utils.decodeBase64(req.query.state as string || '') || '{}')
         //@ts-ignore

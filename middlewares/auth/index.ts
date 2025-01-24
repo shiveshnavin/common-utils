@@ -1,5 +1,5 @@
 //@ts-nocheck
-import express, { Express, Response, Request } from 'express'
+import express, { Express, Response, Request, Router } from 'express'
 //@ts-ignore
 import { MultiDbORM } from 'multi-db-orm'
 import * as bodyParser from 'body-parser'
@@ -90,7 +90,7 @@ export function createAuthMiddleware(
             next: Function) => {
             res.status(status).send(ApiResponse.notOk(reason))
         }
-) {
+): Router {
     const TABLE_USER = 'auth_users'
     const TABLE_FORGOTPASSWORD = "forgot_password"
     const PASSWORD_HASH_LEN = 20

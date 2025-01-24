@@ -7,10 +7,24 @@ export class Vault {
     constructor(basePath?: string) {
         this.basePath = basePath ?? 'common-creds'
     }
+    /**
+     * Deprecated
+     * Get an instance of Valult
+     * @param basePath 
+     * @returns 
+     */
     static get(basePath?: string) {
         return new Vault(basePath)
     }
 
+    /**
+     * Get an instance of Valult
+     * @param basePath 
+     * @returns 
+     */
+    static getInstance(basePath?: string) {
+        return new Vault(basePath)
+    }
     /**
      * 
      * @param relativePath Relative path considering common-creds at root

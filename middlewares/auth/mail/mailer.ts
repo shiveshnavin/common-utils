@@ -1,8 +1,7 @@
 //@ts-ignore
-import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
-
+var nodemailer;
 const replaceAll = function (str: string, match: string, replace: string) {
     return str.replace(new RegExp(match, 'g'), () => replace);
 }
@@ -32,6 +31,9 @@ export class Mailer {
     emailTemplateHtml: any
     config: MailerConfig
     constructor(mailConfig: MailerConfig) {
+        if (!nodemailer) {
+            nodemailer = require('nodemailer')
+        }
         this.config = mailConfig
         this.emailTransporter = nodemailer.createTransport({
             host: mailConfig.host,

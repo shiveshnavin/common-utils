@@ -1,8 +1,8 @@
 //@ts-nocheck
-import PipeLane, { PipeTask } from "pipelane";
+import PipeLane, { InputWithPreviousInputs, OutputWithStatus, PipeTask } from "pipelane";
 import Utils from "./Utils";
 
-export class WrapperPipeTask extends PipeTask<any, any>{
+export class WrapperPipeTask extends PipeTask<any, any> {
 
     onExecute;
     onKillCmd;

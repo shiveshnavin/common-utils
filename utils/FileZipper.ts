@@ -1,9 +1,8 @@
-//@ts-nocheck
 import * as fs from 'fs';
 import * as path from 'path';
-import archiver from 'archiver';
-import unzipper from 'unzipper';
 
+var archiver;
+var unzipper
 function getClosestCommonRoot(files: string[]): string {
     if (files.length === 0) {
         return '';
@@ -30,7 +29,9 @@ export function ZipFiles(filesToExport: string[], outputPath: string): Promise<n
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
     }
-
+    if (!archiver) {
+        archiver = require('archiver')
+    }
     const output = fs.createWriteStream(outputPath);
     const archive = archiver('zip');
 
@@ -76,7 +77,7 @@ export function UnzipGzFile(filePath, outFile) {
     return new Promise((resolve, reject) => {
         input.pipe(gunzip).pipe(output).on("finish", () => {
             if (fs.existsSync(outFile))
-                resolve()
+                resolve('ok')
             else
                 reject()
         });
@@ -90,6 +91,9 @@ export async function UnzipFiles(filePath, targetDir) {
             fs.mkdirSync(targetDir, { recursive: true });
         }
 
+        if (!unzipper) {
+            unzipper = require('unzipper')
+        }
         // Open the zip file and extract its contents to the targetDir
         await fs.createReadStream(filePath)
             .pipe(unzipper.Extract({ path: targetDir }))
