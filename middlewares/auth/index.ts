@@ -329,6 +329,7 @@ export function createAuthMiddleware(
                 addAccessToken(res, token)
                 user!.access_token = token
                 delete user?.password
+                user.access_token = token
                 if (!res.headersSent)
                     res.send(ApiResponse.ok(user))
             }).catch((e) => {
