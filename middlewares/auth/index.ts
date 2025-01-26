@@ -107,13 +107,13 @@ export function createAuthMiddleware(
         id: 'stringsmall',
         password: 'stringsmall'
     }
-    db.create(TABLE_USER, sampleUser).catch(e=>{
+    db.create(TABLE_USER, sampleUser).catch(e => {
         console.warn(
-          "auth-middleware",
-          "Error creating ",
-          TABLE_USER,
-          ".",
-          e.message
+            "auth-middleware",
+            "Error creating ",
+            TABLE_USER,
+            ".",
+            e.message
         );
     })
     if (!config.mailer) {
@@ -170,6 +170,12 @@ export function createAuthMiddleware(
     authApp.use(bodyParser.urlencoded())
     authApp.use(bodyParser.json())
     authApp.use((req, res, next) => {
+        let authorization: string = (req.headers['authorization'] || req.query.authorization) as string || (req.cookies && req.cookies['access_token'])
+        if (authorization) {
+            let user = getUserFromAccesstoken(req)
+            if (user)
+                req.session.user = user
+        }
         if (skipAuthRoutes?.some((route) => {
             return route.includes("*") ?
                 req.path.match(route) :
@@ -180,14 +186,10 @@ export function createAuthMiddleware(
             }
             next()
         } else {
-            let authorization: string = (req.headers['authorization'] || req.query.authorization) as string || (req.cookies && req.cookies['access_token'])
             if (authorization) {
-                let user = getUserFromAccesstoken(req)
                 if (!user) {
                     return handleUnauthenticatedRequest(401, `Unauthorized`, req, res, next)
                 }
-                //@ts-ignore
-                req.session.user = user
                 const accessToken = getAccessTokenFromHeader(req)
                 res.cookie('access_token', accessToken, {
                     maxAge: config.expiresInSec * 1000,
