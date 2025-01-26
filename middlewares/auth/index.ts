@@ -352,6 +352,7 @@ export function createAuthMiddleware(
                     let token = generateUserJwt(user!, secret, config.expiresInSec)
                     addAccessToken(res, token)
                     delete user.password
+                    user.access_token = token
                     if (req.query.returnUrl)
                         res.redirect(req.query.returnUrl as string)
                     else
