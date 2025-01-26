@@ -171,8 +171,9 @@ export function createAuthMiddleware(
     authApp.use(bodyParser.json())
     authApp.use((req, res, next) => {
         let authorization: string = (req.headers['authorization'] || req.query.authorization) as string || (req.cookies && req.cookies['access_token'])
+        let user;
         if (authorization) {
-            let user = getUserFromAccesstoken(req)
+            user = getUserFromAccesstoken(req)
             if (user)
                 req.session.user = user
         }
