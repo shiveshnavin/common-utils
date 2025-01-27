@@ -1,6 +1,6 @@
 # Common Utils
 
-Dependencies require installation
+Dependencies that might be required for installation DEPENDING on what all you need.
 
 ```
 
