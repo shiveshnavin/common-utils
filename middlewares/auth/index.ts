@@ -108,14 +108,20 @@ export function createAuthMiddleware(
         password: 'stringsmall'
     }
     db.create(TABLE_USER, sampleUser).catch(e => {
-        console.warn(
-            "auth-middleware",
-            "Error creating ",
-            TABLE_USER,
-            ".",
-            e.message
-        );
+
     })
+
+    const sampleForgotPaswd: ForgotPassword = {
+        id: 'stringsmall',
+        email: 'stringsmall',
+        link: 'stringlarge',
+        linkExp: 'number',
+        secret: 'stringlarge'
+    }
+    db.create(TABLE_FORGOTPASSWORD, sampleForgotPaswd).catch(e => {
+
+    })
+
     if (!config.mailer) {
         let MailConfig = Utils.readFileToObject('mail.json')
         if (!MailConfig) {
@@ -384,7 +390,7 @@ export function createAuthMiddleware(
             if (user == undefined) {
                 return res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
             }
-            const emailObj = {
+            const emailObj: ForgotPassword = {
                 id: user.id,
                 email: email,
                 link: link,
