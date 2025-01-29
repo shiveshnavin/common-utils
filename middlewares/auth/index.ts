@@ -302,6 +302,18 @@ export function createAuthMiddleware(
         res.send(ApiResponse.ok(user))
     })
 
+    authApp.get('/auth/logout', async (req, res, next) => {
+        if (req.session?.destroy) {
+            req.session.destroy(() => {
+                res.redirect('/')
+            })
+        }
+        else {
+            req.session = null
+            res.redirect('/')
+        }
+    })
+
     const LoginPageHtml = LoginPage(appname)
     authApp.get('/auth/login', async (req, res, next) => {
         res.send(LoginPageHtml)
