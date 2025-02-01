@@ -63,8 +63,8 @@ export class Mailer {
             .replaceAll("{{host}}", this.config.website)
             .replaceAll("{{companyname}}", this.config.company)
             .replaceAll("{{privacy}}", this.config.privacy || (this.config.website + "/toc.html"))
-            .replaceAll("{{toc}}", this.config.terms || (this.config.website + "/privacy-policy.html"))
-            .replaceAll("{{terms}}", this.config.terms || (this.config.website + "/privacy-policy.html"))
+            .replaceAll("{{toc}}", this.config.terms || (this.config.website + "/privacy.html"))
+            .replaceAll("{{terms}}", this.config.terms || (this.config.website + "/privacy.html"))
             .replaceAll("{{instagram}}", this.config.instagram)
             .replaceAll("{{cdn}}", this.config.cdn)
 
