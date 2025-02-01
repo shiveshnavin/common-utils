@@ -1,6 +1,6 @@
 //@ts-ignore
 import fs from 'fs';
-import path from 'path';
+import { EMAIL_TEMPLATE } from './email_template'
 var nodemailer;
 const replaceAll = function (str: string, match: string, replace: string) {
     return str.replace(new RegExp(match, 'g'), () => replace);
@@ -55,7 +55,7 @@ export class Mailer {
     getEmailTemplate() {
         if (this.emailTemplateHtml)
             return this.emailTemplateHtml
-        this.emailTemplateHtml = fs.readFileSync(path.join(__dirname, './email_template.html')).toString();
+        this.emailTemplateHtml = EMAIL_TEMPLATE;
         this.emailTemplateHtml = this.emailTemplateHtml
             .replaceAll("{{email}}", this.config.email)
             .replaceAll("{{appname}}", this.config.app)

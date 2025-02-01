@@ -411,6 +411,7 @@ export function createAuthMiddleware(
             }
 
             //inserting into Database - forgot password
+            await db.delete(TABLE_FORGOTPASSWORD, { id: emailObj.id })
             await db.insert(TABLE_FORGOTPASSWORD, emailObj)
 
             res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))

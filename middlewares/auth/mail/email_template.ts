@@ -1,3 +1,4 @@
+export const EMAIL_TEMPLATE = `
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -138,3 +139,4 @@
     </div>
   </body>
 </html>
+`
