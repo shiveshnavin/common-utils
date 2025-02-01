@@ -89,7 +89,8 @@ export function createAuthMiddleware(
             res: Response,
             next: Function) => {
             res.status(status).send(ApiResponse.notOk(reason))
-        }
+        },
+    logger?: { debug: (...params) => void, error: (...params) => void, info: (...params) => void, warn: (...params) => void, }
 ): Router {
     const TABLE_USER = 'auth_users'
     const TABLE_FORGOTPASSWORD = "forgot_password"
@@ -189,7 +190,7 @@ export function createAuthMiddleware(
                 req.path == route;
         })) {
             if (logLevel > 4) {
-                Utils.logPlain('Skipping auth check for ', req.path)
+                Utils.log(req, 'Skipping auth check for ', req.path)
             }
             next()
         } else {
@@ -352,6 +353,7 @@ export function createAuthMiddleware(
                 if (!res.headersSent)
                     res.send(ApiResponse.ok(user))
             }).catch((e) => {
+                Utils.log(req, 'Error is signup. ' + e.message)
                 if (!res.headersSent)
                     res.send(ApiResponse.notOk(e.message))
             })
@@ -410,15 +412,19 @@ export function createAuthMiddleware(
                 secret
             }
 
-            //inserting into Database - forgot password
-            await db.delete(TABLE_FORGOTPASSWORD, { id: emailObj.id })
-            await db.insert(TABLE_FORGOTPASSWORD, emailObj)
+            try {
+                //inserting into Database - forgot password
+                await db.delete(TABLE_FORGOTPASSWORD, { id: emailObj.id })
+                await db.insert(TABLE_FORGOTPASSWORD, emailObj)
 
-            res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
+                res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
 
-            //send email
-            config.mailer?.sendResetPasswordMail(email, user.name, emailObj.link)
-
+                //send email
+                await config.mailer?.sendResetPasswordMail(email, user.name, emailObj.link)
+                Utils.log(req, 'forgotpassword mail sent to ' + email)
+            } catch (e) {
+                Utils.log(req, 'Error is forgotpassword. ' + e.message)
+            }
         })
 
         //change password API
@@ -447,6 +453,7 @@ export function createAuthMiddleware(
                 }
             }
             catch (e: any) {
+                Utils.log(req, 'Error is forgotpassword. ' + e.message)
                 res.status(500).send(ApiResponse.notOk("Internal Server Error"))
             }
 

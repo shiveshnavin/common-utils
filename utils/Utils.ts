@@ -32,34 +32,34 @@ export class Utils {
     static async processInParallel(items, runner, parallelism) {
         const results = [];
         const executing = [];
-    
+
         for (const item of items) {
-        const task = runner(item).then((result) => {
-            results.push({
-                item,
-                result
-            });
-            executing.splice(executing.indexOf(task), 1); // Remove task from executing queue.
-        }).catch(e=>{
-            results.push({
-                item,
-                result: undefined
-            });
-        })
-    
-        executing.push(task);
-    
-        if (executing.length >= parallelism) {
-            await Promise.race(executing); // Wait for one of the tasks to complete.
+            const task = runner(item).then((result) => {
+                results.push({
+                    item,
+                    result
+                });
+                executing.splice(executing.indexOf(task), 1); // Remove task from executing queue.
+            }).catch(e => {
+                results.push({
+                    item,
+                    result: undefined
+                });
+            })
+
+            executing.push(task);
+
+            if (executing.length >= parallelism) {
+                await Promise.race(executing); // Wait for one of the tasks to complete.
+            }
         }
-        }
-    
+
         // Wait for the remaining tasks to complete.
         await Promise.all(executing);
-    
+
         return results;
     }
-  
+
     public static startsWithAny(string, prefixes) {
         for (const prefix of prefixes) {
             if (string.startsWith(prefix)) {
@@ -261,6 +261,9 @@ export class Utils {
         if (req && req.header('x-correlation-id')) {
             corrid = req.header('x-correlation-id');
         }
+        if (req && req.header('correlation-id')) {
+            corrid = req.header('correlation-id');
+        }
         else if (req && req['corrid']) {
             corrid = req['corrid'];
         } else if (typeof req == 'string') {
@@ -273,6 +276,18 @@ export class Utils {
         const formattedTime = istTime.format('M/DD/YY, h:mm:ss:SSS A');
 
         console.log(`(corrid=${corrid}) (time=${formattedTime}) `, tenant ? `(tenant=${tenant})` : '', ...params)
+        if (req.logger?.info) {
+            req.logger.info({
+                message: params.join(" . "),
+                labels: {
+                    url: req.url,
+                    method: req.method,
+                    user: req.session?.user?.id,
+                    corrid,
+                    origin: 'app'
+                }
+            })
+        }
     }
 
     public static getHighestResMedia(mediaArray: { w, h }) {
@@ -746,9 +761,9 @@ export class Utils {
         return left + right;
     }
 
-    public static validateEmail(email:String){
+    public static validateEmail(email: String) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-       return emailRegex.test(email)       
+        return emailRegex.test(email)
 
     }
 
