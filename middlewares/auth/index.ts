@@ -117,7 +117,7 @@ export function createAuthMiddleware(
         email: 'stringsmall',
         link: 'stringlarge',
         linkExp: 'number',
-        secret: 'stringlarge'
+        secret: 'stringsmall'
     }
     db.create(TABLE_FORGOTPASSWORD, sampleForgotPaswd).catch(e => {
 
@@ -453,7 +453,7 @@ export function createAuthMiddleware(
                 }
             }
             catch (e: any) {
-                Utils.log(req, 'Error is forgotpassword. ' + e.message)
+                Utils.log(req, 'Error is changepassword. ' + e.message)
                 res.status(500).send(ApiResponse.notOk("Internal Server Error"))
             }
 
