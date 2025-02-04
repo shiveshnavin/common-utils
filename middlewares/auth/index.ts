@@ -291,16 +291,24 @@ export function createAuthMiddleware(
 
     //returns user data
     authApp.get('/auth/me', async (req, res, next) => {
-        //@ts-ignore
-        let user = req.session?.user
-        if (!user) {
-            user = getUserFromAccesstoken(req)
+        try {
+            //@ts-ignore
+            let user = req.session?.user as AuthUser
+            if (!user) {
+                user = getUserFromAccesstoken(req)
+            }
+            if (user) {
+                const userFromDb: AuthUser = await db.getOne(TABLE_USER, { id: user.id })
+                user = userFromDb
+            }
+            if (!user) {
+                return handleUnauthenticatedRequest(401, 'Unauthorized', req, res, next)
+            }
+            delete user.password
+            res.send(ApiResponse.ok(user))
+        } catch (e) {
+            res.status(500).send(ApiResponse.notOk(e.message))
         }
-        if (!user) {
-            return handleUnauthenticatedRequest(401, 'Unauthorized', req, res, next)
-        }
-        delete user.password
-        res.send(ApiResponse.ok(user))
     })
 
     authApp.get('/auth/logout', async (req, res, next) => {
