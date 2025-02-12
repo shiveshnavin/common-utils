@@ -49,7 +49,7 @@ export interface AuthMethodConfig {
         creds: GoogleSigninConfig,
         defaultSignInReturnUrl: string
     },
-    initDb: Promise<void>
+    initDb?: () => Promise<void>
 }
 /**
  * 
@@ -287,9 +287,12 @@ export function createAuthMiddleware(
         const { email, id } = body
         let user: AuthUser = await getUser(email, id)
         if (user) {
-            Object.assign(user, body)
+            user.name = body.name
+            user.password = body.password
+            user.avatar = body.avatar
         } else {
             user = body
+            user.status = user.status || "UNVERIFIED"
             if (!user.id) {
                 user.id = Utils.generateUID(user.email)
             }
@@ -507,6 +510,7 @@ export function createAuthMiddleware(
 
     if (config.google) {
         async function saveAndRedirectUser(user: AuthUser, returnUrl: string, req: any, res: any) {
+            user.status = "ACTIVE"
             let loggedInUser = await signUpUser(user, req, res) as AuthUser
             if (!res.headersSent) {
                 let token = generateUserJwt(loggedInUser, secret, config.expiresInSec)
