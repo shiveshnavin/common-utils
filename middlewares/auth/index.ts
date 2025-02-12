@@ -203,9 +203,9 @@ export function createAuthMiddleware(
             next()
         } else {
             if (authorization) {
-                if (!user || user.status == "INACTIVE") {
+                if (!user || user?.status == "INACTIVE") {
                     let msg = 'Unauthorized'
-                    if (user.status == "INACTIVE") {
+                    if (user?.status == "INACTIVE") {
                         msg = 'Account locked. Please contact support.'
                     }
                     res.clearCookie()
@@ -316,10 +316,10 @@ export function createAuthMiddleware(
                 const userFromDb: AuthUser = await db.getOne(TABLE_USER, { id: user.id })
                 user = userFromDb
             }
-            if (!user || user.status == "INACTIVE") {
+            if (!user || user?.status == "INACTIVE") {
                 {
                     let msg = 'Unauthorized'
-                    if (user.status == "INACTIVE") {
+                    if (user?.status == "INACTIVE") {
                         msg = 'Account locked. Please contact support.'
                     }
                     return handleUnauthenticatedRequest(401, msg, req, res, next)
@@ -328,6 +328,7 @@ export function createAuthMiddleware(
             delete user.password
             res.send(ApiResponse.ok(user))
         } catch (e) {
+            Utils.log(req, 'Error in /auth/me ' + e.message + ' at ' + e.stack)
             res.status(500).send(ApiResponse.notOk(e.message))
         }
     })
@@ -367,7 +368,7 @@ export function createAuthMiddleware(
                     if (user.password != password) {
                         return handleUnauthenticatedRequest(401, 'User credentials are incorrect', req, res, next)
                     }
-                    if (user.status == "INACTIVE") {
+                    if (user?.status == "INACTIVE") {
                         return handleUnauthenticatedRequest(401, 'Account locked. Please contact support.', req, res, next)
                     }
                 }
@@ -398,7 +399,7 @@ export function createAuthMiddleware(
             let user = await getUser(email, id)
 
             if (user) {
-                if (user.status == "INACTIVE") {
+                if (user?.status == "INACTIVE") {
                     return handleUnauthenticatedRequest(401, 'Account locked. Please contact support.', req, res, next)
                 }
                 let hashPassword = Utils.generateHash(password, PASSWORD_HASH_LEN)
