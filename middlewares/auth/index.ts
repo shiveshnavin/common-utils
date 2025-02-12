@@ -48,7 +48,8 @@ export interface AuthMethodConfig {
     google?: {
         creds: GoogleSigninConfig,
         defaultSignInReturnUrl: string
-    }
+    },
+    initDb: Promise<void>
 }
 /**
  * 
@@ -100,28 +101,35 @@ export function createAuthMiddleware(
     if (!db) {
         throw new Error('db must not be non-null')
     }
-    const sampleUser: AuthUser = {
-        avatar: 'stringlarge',
-        email: 'stringsmall',
-        name: 'stringsmall',
-        access_token: 'stringlarge',
-        id: 'stringsmall',
-        password: 'stringsmall'
+    if (!config.initDb) {
+        config.initDb = async () => {
+            const sampleUser: AuthUser = {
+                avatar: 'stringlarge',
+                email: 'stringsmall',
+                name: 'stringsmall',
+                access_token: 'stringlarge',
+                id: 'stringsmall',
+                password: 'stringsmall',
+                extrajson?: 'stringlarge',
+                status?: 'stringsmall',
+            }
+            await db.create(TABLE_USER, sampleUser).catch(e => {
+
+            })
+
+            const sampleForgotPaswd: ForgotPassword = {
+                id: 'stringsmall',
+                email: 'stringsmall',
+                link: 'stringlarge',
+                linkExp: 'number',
+                secret: 'stringsmall'
+            }
+            await db.create(TABLE_FORGOTPASSWORD, sampleForgotPaswd).catch(e => {
+
+            })
+        }
     }
-    db.create(TABLE_USER, sampleUser).catch(e => {
-
-    })
-
-    const sampleForgotPaswd: ForgotPassword = {
-        id: 'stringsmall',
-        email: 'stringsmall',
-        link: 'stringlarge',
-        linkExp: 'number',
-        secret: 'stringsmall'
-    }
-    db.create(TABLE_FORGOTPASSWORD, sampleForgotPaswd).catch(e => {
-
-    })
+    config.initDb()
 
     if (!config.mailer) {
         let MailConfig = Utils.readFileToObject('mail.json')
@@ -195,8 +203,13 @@ export function createAuthMiddleware(
             next()
         } else {
             if (authorization) {
-                if (!user) {
-                    return handleUnauthenticatedRequest(401, `Unauthorized`, req, res, next)
+                if (!user || user.status == "INACTIVE") {
+                    let msg = 'Unauthorized'
+                    if (user.status == "INACTIVE") {
+                        msg = 'Account locked. Please contact support.'
+                    }
+                    res.clearCookie()
+                    return handleUnauthenticatedRequest(401, msg, req, res, next)
                 }
                 const accessToken = getAccessTokenFromHeader(req)
                 res.cookie('access_token', accessToken, {
@@ -272,8 +285,7 @@ export function createAuthMiddleware(
 
     async function signUpUser(body: AuthUser, req: any, res: any): Promise<AuthUser | undefined> {
         const { email, id } = body
-        //@ts-ignore
-        let user: any = await getUser(email, id)
+        let user: AuthUser = await getUser(email, id)
         if (user) {
             Object.assign(user, body)
         } else {
@@ -301,8 +313,14 @@ export function createAuthMiddleware(
                 const userFromDb: AuthUser = await db.getOne(TABLE_USER, { id: user.id })
                 user = userFromDb
             }
-            if (!user) {
-                return handleUnauthenticatedRequest(401, 'Unauthorized', req, res, next)
+            if (!user || user.status == "INACTIVE") {
+                {
+                    let msg = 'Unauthorized'
+                    if (user.status == "INACTIVE") {
+                        msg = 'Account locked. Please contact support.'
+                    }
+                    return handleUnauthenticatedRequest(401, msg, req, res, next)
+                }
             }
             delete user.password
             res.send(ApiResponse.ok(user))
@@ -346,6 +364,9 @@ export function createAuthMiddleware(
                     if (user.password != password) {
                         return handleUnauthenticatedRequest(401, 'User credentials are incorrect', req, res, next)
                     }
+                    if (user.status == "INACTIVE") {
+                        return handleUnauthenticatedRequest(401, 'Account locked. Please contact support.', req, res, next)
+                    }
                 }
             }
 
@@ -374,6 +395,9 @@ export function createAuthMiddleware(
             let user = await getUser(email, id)
 
             if (user) {
+                if (user.status == "INACTIVE") {
+                    return handleUnauthenticatedRequest(401, 'Account locked. Please contact support.', req, res, next)
+                }
                 let hashPassword = Utils.generateHash(password, PASSWORD_HASH_LEN)
                 if (usePlainTextPassword) {
                     hashPassword = password

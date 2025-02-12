@@ -25,7 +25,8 @@ export interface AuthUser {
     password?: string,
     id?: string,
     access_token?: string,
-    extrajson?: string
+    extrajson?: string,
+    status?: "ACTIVE" | "INACTIVE" | "UNVERIFIED"
 }
 
 export interface ForgotPassword {
