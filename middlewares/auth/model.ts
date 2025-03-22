@@ -26,6 +26,8 @@ export interface AuthUser {
     id?: string,
     access_token?: string,
     extrajson?: string,
+    identity?: "email" | "google",
+    created?: number,
     status?: "ACTIVE" | "INACTIVE" | "UNVERIFIED"
 }
 

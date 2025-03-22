@@ -51,6 +51,16 @@ export interface AuthMethodConfig {
     },
     initDb?: () => Promise<void>
 }
+
+export enum AuthEvents {
+    USER_CREATED,
+    USER_UPDATED,
+    USER_DELETED,
+    USER_LOGIN,
+    USER_LOGOUT,
+    USER_FORGOT_PASSWORD,
+    USER_RESET_PASSWORD
+}
 /**
  * 
  * @param db Instance of MultiDbORM
@@ -91,7 +101,8 @@ export function createAuthMiddleware(
             next: Function) => {
             res.status(status).send(ApiResponse.notOk(reason))
         },
-    logger?: { debug: (...params) => void, error: (...params) => void, info: (...params) => void, warn: (...params) => void, }
+    logger?: { debug: (...params) => void, error: (...params) => void, info: (...params) => void, warn: (...params) => void, },
+    onEvent?: (eventName: AuthEvents, data: any) => void
 ): Router {
     const TABLE_USER = 'auth_users'
     const TABLE_FORGOTPASSWORD = "forgot_password"
@@ -109,6 +120,8 @@ export function createAuthMiddleware(
                 name: 'stringsmall',
                 access_token: 'stringlarge',
                 id: 'stringsmall',
+                created: 1234,
+                identity: "stringsmall",
                 password: 'stringsmall',
                 extrajson?: 'stringlarge',
                 status?: 'stringsmall',
@@ -255,9 +268,19 @@ export function createAuthMiddleware(
 
 
     saveUser = saveUser || async function (user: AuthUser, _req: Express.Request, _res: Response): Promise<AuthUser> {
+        user.created = user.created || Date.now()
         await db.insert(TABLE_USER, user)
+            .then(() => {
+                if (onEvent) {
+                    onEvent(AuthEvents.USER_CREATED, user)
+                }
+            })
             .catch(e => {
                 if (e.message.includes("ER_DUP_ENTRY")) {
+                    delete user.created
+                    if (onEvent) {
+                        onEvent(AuthEvents.USER_UPDATED, user)
+                    }
                     return db.update(TABLE_USER, { id: user.id }, user)
                 }
                 console.error(`Fatal Error saving user ${user.id} ` + e.message)
@@ -300,6 +323,7 @@ export function createAuthMiddleware(
         if (user.password && !usePlainTextPassword) {
             user.password = Utils.generateHash(user.password, PASSWORD_HASH_LEN)
         }
+        user.created = user.created || Date.now()
         return (saveUser && await saveUser(user, req, res))
     }
 
@@ -334,6 +358,7 @@ export function createAuthMiddleware(
     })
 
     authApp.get('/auth/logout', async (req, res, next) => {
+        onEvent && onEvent(AuthEvents.USER_LOGOUT, req.session?.user)
         if (req.session?.destroy) {
             req.session.destroy(() => {
                 res.redirect('/')
@@ -350,7 +375,16 @@ export function createAuthMiddleware(
         res.send(LoginPageHtml)
     })
     authApp.get('/auth/signout', async (req, res, next) => {
-        handleUnauthenticatedRequest(401, 'Logged out', req, res, next)
+        onEvent && onEvent(AuthEvents.USER_LOGOUT, req.session?.user)
+        if (req.session?.destroy) {
+            req.session.destroy(() => {
+                res.redirect('/')
+            })
+        }
+        else {
+            req.session = null
+            res.redirect('/')
+        }
     })
     // if password login is selected, then create signup api
     if (config.password) {
@@ -377,6 +411,7 @@ export function createAuthMiddleware(
             if (_.isEmpty(req.body.email) || _.isEmpty(req.body.password)) {
                 return res.status(400).send(ApiResponse.notOk('email, password cannot be empty'))
             }
+            req.body.identity = "email"
             signUpUser(req.body, req, res).then((user) => {
                 let token = generateUserJwt(user!, secret, config.expiresInSec)
                 addAccessToken(res, token)
@@ -411,6 +446,7 @@ export function createAuthMiddleware(
                     addAccessToken(res, token)
                     delete user.password
                     user.access_token = token
+                    onEvent && onEvent(AuthEvents.USER_LOGIN, user)
                     if (req.query.returnUrl)
                         res.redirect(req.query.returnUrl as string)
                     else
@@ -457,6 +493,7 @@ export function createAuthMiddleware(
 
                 //send email
                 await config.mailer?.sendResetPasswordMail(email, user.name, emailObj.link)
+                onEvent && onEvent(AuthEvents.USER_FORGOT_PASSWORD, emailObj)
                 Utils.log(req, 'forgotpassword mail sent to ' + email)
             } catch (e) {
                 Utils.log(req, 'Error is forgotpassword. ' + e.message)
@@ -480,6 +517,7 @@ export function createAuthMiddleware(
 
                 if (checkLinkExpiry(forgotpassword)) {
                     await db.update(TABLE_USER, { id: userId }, { password: newPassword })
+                    onEvent && onEvent(AuthEvents.USER_RESET_PASSWORD, { id: userId, newPassword })
                     res.send(ApiResponse.ok("Password updated successfully !"))
                     await db.delete(TABLE_FORGOTPASSWORD, { id: userId })
                 }
@@ -512,6 +550,7 @@ export function createAuthMiddleware(
     if (config.google) {
         async function saveAndRedirectUser(user: AuthUser, returnUrl: string, req: any, res: any) {
             user.status = "ACTIVE"
+            user.identity = "google"
             let loggedInUser = await signUpUser(user, req, res) as AuthUser
             if (!res.headersSent) {
                 let token = generateUserJwt(loggedInUser, secret, config.expiresInSec)
