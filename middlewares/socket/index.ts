@@ -17,11 +17,13 @@ export interface ISocketConnector {
 }
 
 export async function createSocket(server: any, logging: boolean = false): Promise<ISocketConnector> {
-    // Dynamically import the 'ws' dependencies
     const { WebSocket, WebSocketServer } = await import('ws')
 
-    // Map to store channel-specific callbacks
+    // Map to store channel-specific callbacks for observer pattern (if needed)
     const observers = new Map<string, SocketCallback>()
+
+    // Map to store subscriptions: channel -> Set of clients (ws connections)
+    const subscriptions = new Map<string, Set<any>>()
 
     // Create a WebSocket server on the provided HTTP server with the '/ws' path
     const wss = new WebSocketServer({ server, path: '/ws' })
@@ -29,13 +31,31 @@ export async function createSocket(server: any, logging: boolean = false): Promi
     wss.on('connection', (ws: any) => {
         logging && console.log('A user connected to /ws')
 
+        // Setup an object to track which channels this client is subscribed to
+        ws.subscriptions = new Set<string>()
+
         ws.on('message', (message: string) => {
             try {
-                // Assume the client sends a JSON string with `channel` and `payload`
                 const parsed = JSON.parse(message.toString())
-                const { channel, payload } = parsed
+                const { channel, payload, action } = parsed
 
-                // If an observer is registered for the channel, invoke its callback
+                // Handle subscription management
+                if (action === 'subscribe') {
+                    ws.subscriptions.add(channel)
+                    if (!subscriptions.has(channel)) {
+                        subscriptions.set(channel, new Set())
+                    }
+                    subscriptions.get(channel)?.add(ws)
+                    logging && console.log(`Client subscribed to ${channel}`)
+                    return
+                } else if (action === 'unsubscribe') {
+                    ws.subscriptions.delete(channel)
+                    subscriptions.get(channel)?.delete(ws)
+                    logging && console.log(`Client unsubscribed from ${channel}`)
+                    return
+                }
+
+                // For normal messages, if an observer is registered, invoke its callback.
                 if (observers.has(channel)) {
                     const callback = observers.get(channel)
                     if (callback) {
@@ -49,6 +69,10 @@ export async function createSocket(server: any, logging: boolean = false): Promi
 
         ws.on('close', () => {
             logging && console.log('User disconnected from /ws')
+            // Clean up subscriptions for this client
+            ws.subscriptions.forEach(channel => {
+                subscriptions.get(channel)?.delete(ws)
+            })
         })
     })
 
@@ -62,13 +86,18 @@ export async function createSocket(server: any, logging: boolean = false): Promi
         },
         emit: (channel, data) => {
             const message = JSON.stringify({ channel, payload: data })
-            wss.clients.forEach((client: any) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(message)
-                }
-            })
+            // Send only to clients subscribed to this channel
+            const clients = subscriptions.get(channel)
+            if (clients) {
+                clients.forEach((client: any) => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(message)
+                    }
+                })
+            }
         }
     }
 
     return socketConnector
 }
+
