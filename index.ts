@@ -20,6 +20,7 @@ export * from './utils/ChromeCluster'
 export * from './utils/Vault'
 export * from './middlewares/auth/index'
 export * from './utils/encrypt'
+export * from './middlewares/socket/index'
 
 import FFMpegUtils from "./utils/FFMpegUtils"
 
