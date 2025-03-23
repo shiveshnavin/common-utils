@@ -19,6 +19,10 @@ interface ObjectWithText {
 }
 
 var cacheConfig = {};
+
+export type Logger = ({ message: string, labels: { origin: string } }) => void
+var defaultLogger: Logger | undefined = undefined
+
 export class Utils {
   /**
    * Processes an array of objects in parallel with a specified level of concurrency.
@@ -142,9 +146,8 @@ export class Utils {
 
   public static assert(actual, expected, msg?) {
     let bool = actual == expected;
-    let err = `Assertion Error.${
-      msg || ""
-    } Expected {${expected}} but found {${actual}}`;
+    let err = `Assertion Error.${msg || ""
+      } Expected {${expected}} but found {${actual}}`;
     if (!bool) throw new Error(err);
   }
 
@@ -246,6 +249,10 @@ export class Utils {
     })(objectOld, objectNew);
   }
 
+  public static setLogger(loggerFunc: Logger) {
+    defaultLogger = loggerFunc;
+  }
+
   public static logPlainWithLevel(level: 0 | 1 | 2 | 3 | 4, ...params) {
     Utils.logWithLevel(level, undefined, ...params);
   }
@@ -286,7 +293,7 @@ export class Utils {
       );
       if (req?.logger?.info) {
         req.logger.info({
-          message: params.join(" . "),
+          message: params.join(" "),
           labels: {
             url: req.url,
             method: req.method,
@@ -296,7 +303,19 @@ export class Utils {
           },
         });
       }
-    } catch (e) {}
+      else if (defaultLogger) {
+        defaultLogger({
+          message: params.join(" "),
+          labels: {
+            url: req?.url,
+            method: req?.method,
+            user: req?.session?.user?.id,
+            corrid,
+            origin: "app",
+          },
+        });
+      }
+    } catch (e) { }
   }
 
   public static getHighestResMedia(mediaArray: { w; h }) {
@@ -714,7 +733,7 @@ export class Utils {
     return Buffer.from(normalString).toString("base64");
   }
 
-  public static getAxios(globalConfig? = {}): Axios {
+  public static getAxios(globalConfig?= {}): Axios {
     let { headers } = globalConfig;
     const axiosClient = axios.create({
       httpsAgent: new https.Agent({
