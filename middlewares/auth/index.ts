@@ -274,10 +274,12 @@ export function createAuthMiddleware(
 
         await db.insert(TABLE_USER, user)
             .catch(e => {
-                if (e.message.includes("ER_DUP_ENTRY")) {
-                    return db.update(TABLE_USER, { id: user.id }, user)
+                if (e.message.includes("ER_DUP_ENTRY") || e.message.includes("already exists")) {
+                    return db.update(TABLE_USER, { id: user.id }, user).catch(e => {
+                        console.error(`Fatal Error updating user ${user.id} ` + e.message)
+                    })
                 }
-                console.error(`Fatal Error saving user ${user.id} ` + e.message)
+                console.error(`Fatal Error creating user ${user.id} ` + e.message)
             })
         delete user.password
         return user
