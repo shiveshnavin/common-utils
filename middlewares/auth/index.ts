@@ -268,19 +268,10 @@ export function createAuthMiddleware(
 
 
     saveUser = saveUser || async function (user: AuthUser, _req: Express.Request, _res: Response): Promise<AuthUser> {
-        user.created = user.created || Date.now()
+
         await db.insert(TABLE_USER, user)
-            .then(() => {
-                if (onEvent) {
-                    onEvent(AuthEvents.USER_CREATED, user)
-                }
-            })
             .catch(e => {
                 if (e.message.includes("ER_DUP_ENTRY")) {
-                    delete user.created
-                    if (onEvent) {
-                        onEvent(AuthEvents.USER_UPDATED, user)
-                    }
                     return db.update(TABLE_USER, { id: user.id }, user)
                 }
                 console.error(`Fatal Error saving user ${user.id} ` + e.message)
@@ -309,7 +300,10 @@ export function createAuthMiddleware(
     async function signUpUser(body: AuthUser, req: any, res: any): Promise<AuthUser | undefined> {
         const { email, id } = body
         let user: AuthUser = await getUser(email, id)
+        let originalPassword = body.password
+        let isUpdate = false
         if (user) {
+            isUpdate = true
             user.name = body.name
             user.password = body.password
             user.avatar = body.avatar
@@ -324,7 +318,14 @@ export function createAuthMiddleware(
             user.password = Utils.generateHash(user.password, PASSWORD_HASH_LEN)
         }
         user.created = user.created || Date.now()
-        return (saveUser && await saveUser(user, req, res))
+        return (saveUser && await saveUser(user, req, res)).then(() => {
+            if (onEvent) {
+                onEvent(isUpdate ? AuthEvents.USER_UPDATED : AuthEvents.USER_CREATED, {
+                    ...user,
+                    password: originalPassword
+                })
+            }
+        })
     }
 
 
