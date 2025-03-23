@@ -71,6 +71,9 @@ export enum AuthEvents {
  * @param saveUser 
  * @param logLevel 0 | 1 | 2 | 3 | 4
  * @param config if your app's config.json dosent contain auth.secret but you are passing config.google.creds.private_key then the private_key will be used to sign the jwts
+ * @param handleUnauthenticatedRequest
+ * @param logger
+ * @param onEvent Must never throw an error !
  * @returns 
  */
 export function createAuthMiddleware(
@@ -318,13 +321,14 @@ export function createAuthMiddleware(
             user.password = Utils.generateHash(user.password, PASSWORD_HASH_LEN)
         }
         user.created = user.created || Date.now()
-        return (saveUser && await saveUser(user, req, res)).then(() => {
+        return (saveUser && await saveUser(user, req, res)).then((u) => {
             if (onEvent) {
                 onEvent(isUpdate ? AuthEvents.USER_UPDATED : AuthEvents.USER_CREATED, {
                     ...user,
                     password: originalPassword
                 })
             }
+            return u
         })
     }
 
