@@ -39,7 +39,7 @@ export function GoogleSigninMiddleware(
     const oAuth2Client = new auth.OAuth2(
         client_id,
         client_secret,
-        redirect_uris[0]
+        callbackUrl
     );
 
     function exchangeGoogleCode(uniqueCode: string) {
