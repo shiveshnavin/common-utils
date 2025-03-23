@@ -20,7 +20,7 @@ interface ObjectWithText {
 
 var cacheConfig = {};
 
-export type Logger = ({ message: string, labels: { origin: string } }) => void
+export type Logger = { info: (log: { message: string, labels: { origin: string } }) => void }
 var defaultLogger: Logger | undefined = undefined
 
 export class Utils {
@@ -303,8 +303,8 @@ export class Utils {
           },
         });
       }
-      else if (defaultLogger) {
-        defaultLogger({
+      else if (defaultLogger?.info) {
+        defaultLogger.info({
           message: params.join(" "),
           labels: {
             url: req?.url,
