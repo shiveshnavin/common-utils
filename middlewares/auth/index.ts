@@ -321,15 +321,14 @@ export function createAuthMiddleware(
             user.password = Utils.generateHash(user.password, PASSWORD_HASH_LEN)
         }
         user.created = user.created || Date.now()
-        return (saveUser && await saveUser(user, req, res)).then((u) => {
-            if (onEvent) {
-                onEvent(isUpdate ? AuthEvents.USER_UPDATED : AuthEvents.USER_CREATED, {
-                    ...user,
-                    password: originalPassword
-                })
-            }
-            return u
-        })
+        let newUser = (saveUser && await saveUser(user, req, res))
+        if (onEvent) {
+            onEvent(isUpdate ? AuthEvents.USER_UPDATED : AuthEvents.USER_CREATED, {
+                ...user,
+                password: originalPassword
+            })
+        }
+        return newUser
     }
 
 
