@@ -310,7 +310,7 @@ export function createAuthMiddleware(
         if (user) {
             isUpdate = true
             user.name = body.name
-            user.password = body.password
+            user.password = body.password || user.password
             user.avatar = body.avatar
         } else {
             user = body
