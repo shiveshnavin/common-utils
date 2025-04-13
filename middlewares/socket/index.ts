@@ -1,3 +1,4 @@
+//@ts-nocheck
 export type SocketCallback = (channel: string, data: any, ws: any) => void
 
 export interface ISocketConnector {
