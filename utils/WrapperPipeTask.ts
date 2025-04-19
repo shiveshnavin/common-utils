@@ -1,20 +1,18 @@
-//@ts-nocheck
-import PipeLane, { InputWithPreviousInputs, OutputWithStatus, PipeTask } from "pipelane";
-import Utils from "./Utils";
+import PipeLane, { PipeTask } from "pipelane";
 
 export class WrapperPipeTask extends PipeTask<any, any> {
 
-    onExecute;
-    onKillCmd;
+    onExecute: any;
+    onKillCmd: any;
 
-    public static of(taskName, onExecute): WrapperPipeTask<InputWithPreviousInputs, OutputWithStatus> {
+    public static of(taskName: any, onExecute: any): WrapperPipeTask {
         return new WrapperPipeTask(taskName, onExecute);
     }
 
-    constructor(taskName, onExecute) {
+    constructor(taskName: any, onExecute: any) {
         super(taskName, taskName)
         if (!onExecute) {
-            throw new Error("must provide a ", onExecute)
+            throw new Error("must provide a onExecute")
         }
         this.onExecute = onExecute;
     }
