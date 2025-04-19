@@ -453,8 +453,8 @@ export function createAuthMiddleware(
                     delete user.password
                     user.access_token = token
                     onEvent && onEvent(AuthEvents.USER_LOGIN, user)
-                    if (req.query.returnUrl)
-                        res.redirect(req.query.returnUrl as string)
+                    if (req.query.returnUrl || req.query.returnUri)
+                        res.redirect(req.query.returnUrl || req.query.returnUri);
                     else
                         res.send(ApiResponse.ok(user))
                 }
