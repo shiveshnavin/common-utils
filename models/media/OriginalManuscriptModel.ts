@@ -23,7 +23,7 @@ export class Transcript {
     title: string
     text: string
     pointers: string[]
-    imageText: string[]
+    imageText: string[] // deprecated
     imageTexts: string[]
     videoText: string[]
     dialog: string[]
