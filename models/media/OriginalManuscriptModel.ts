@@ -24,6 +24,7 @@ export class Transcript {
     text: string
     pointers: string[]
     imageText: string[]
+    imageTexts: string[]
     videoText: string[]
     dialog: string[]
     imageAbsPathsOriginal: SectionMedia[]
