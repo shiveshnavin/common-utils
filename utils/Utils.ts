@@ -491,6 +491,14 @@ export class Utils {
     return value;
   }
 
+  public static writeFileString(path, string) {
+    fs.writeFileSync(path, string);
+  }
+
+  public static writeFileObject(path, obj) {
+    Utils.writeFileString(path, JSON.stringify(obj, null, 2));
+  }
+
   public static readFileToObject(path) {
     if (!fs.existsSync(path)) {
       return undefined;

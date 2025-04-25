@@ -22,9 +22,9 @@ export class WrapperPipeTask extends PipeTask<any, any> {
         }
         return true;
     }
-    async execute(pipeWorkInstance: PipeLane, inputs: any): Promise<any[]> {
+    async execute(pipeWorksInstance: PipeLane, inputs: any): Promise<any[]> {
         var that = this;
-        return this.onExecute(pipeWorkInstance, inputs, (onKill) => {
+        return this.onExecute(pipeWorksInstance, inputs, (onKill) => {
             that.onKillCmd = onKill
         })
     }
