@@ -4,6 +4,11 @@ import { PerformanceRecorder } from "./PerformanceRecorder";
 import fs from 'fs'
 import { Utils } from "./Utils";
 
+export type ChatGptTrainingMeta = {
+    file?: string,
+    text?: string
+}
+
 export class ChatGptTraining {
     private cgpt: ChatGptApi
     private maxRetries = 5
@@ -17,6 +22,9 @@ export class ChatGptTraining {
         i: number,
         convoId?: string,
         retries?: number) {
+        if (!fs.existsSync(folderPath)) {
+            fs.mkdirSync(folderPath, { recursive: true })
+        }
         let chkp = path.join(folderPath, '.checkpoint.json')
         fs.writeFileSync(chkp, JSON.stringify({
             i: i,
@@ -41,10 +49,15 @@ export class ChatGptTraining {
         }
         return false
     }
-    async train(folderPath: string) {
+    async train(folderPath?: string, meta?: ChatGptTrainingMeta[]) {
         this.cgpt.conversationId = 'new'
         let start = 0
-        let ckkp = this.getCheckpoint(folderPath)
+        let ckkp;
+        let checkpointKey = folderPath
+        if (meta) {
+            checkpointKey = "training/" + Utils.generateHash(JSON.stringify(meta), 10)
+        }
+        ckkp = this.getCheckpoint(checkpointKey)
         if (ckkp) {
             let chat = await this.cgpt.getChat(ckkp.conversationId)
             if (chat) {
@@ -58,29 +71,34 @@ export class ChatGptTraining {
             }
         }
         let perf = PerformanceRecorder.create()
-        let metaPath = path.join(folderPath, 'meta.json')
-        if (fs.existsSync(metaPath)) {
-            let meta = JSON.parse(fs.readFileSync(metaPath).toString())
-            Utils.logPlain('Started training with itemcount=', meta.length, ' and checkpoint at', start, 'retrycount=', ckkp?.retries)
-            for (let i = start; i < meta.length; i++) {
-                const train = meta[i];
+        let metaPath = folderPath ? path.join(folderPath, 'meta.json') : undefined
+        if (metaPath && fs.existsSync(metaPath) || meta?.length > 0) {
+            let metaDataArr: ChatGptTrainingMeta[];
+            if (metaPath) {
+                metaDataArr = Utils.readFileToObject(metaPath) as ChatGptTrainingMeta[]
+            } else {
+                metaDataArr = meta
+            }
+            Utils.logPlain('Started training with itemcount=', metaDataArr.length, ' and checkpoint at', start, 'retrycount=', ckkp?.retries)
+            for (let i = start; i < metaDataArr.length; i++) {
+                const train = metaDataArr[i];
                 if (train.file) {
-                    train.text = fs.readFileSync(path.join(folderPath, train.file)).toString()
+                    train.text = fs.readFileSync(path.join(folderPath || '', train.file)).toString()
                 }
                 if (train.text) {
                     let resp = await this.cgpt.query(train.text)
-                    this.checkpoint(folderPath, start, this.cgpt.conversationId, (ckkp?.retries || 0) + 1)
+                    this.checkpoint(checkpointKey, start, this.cgpt.conversationId, (ckkp?.retries || 0) + 1)
                     if (!resp?.response) {
                         throw new Error('Training failed as no response from chatgpt. Please try training again')
                     }
                 } else {
                     throw new Error('Must provide `file` or `text` in each training row')
                 }
-                this.checkpoint(folderPath, i, this.cgpt.conversationId, 0)
-                Utils.logPlain('Training', Math.round(100 * ((i + 1) / meta.length)), '% complete')
+                this.checkpoint(checkpointKey, i, this.cgpt.conversationId, 0)
+                Utils.logPlain('Training', Math.round(100 * ((i + 1) / metaDataArr.length)), '% complete')
             }
             Utils.logPlain('Training completed in ', perf.elapsedString(), 'conversationId=', this.cgpt.conversationId)
-            this.removeCheckpoint(folderPath)
+            this.removeCheckpoint(checkpointKey)
             return this.cgpt.conversationId
         } else {
             throw new Error(`Folder ${folderPath} doesnot contain a meta.json`)
