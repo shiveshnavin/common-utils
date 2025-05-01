@@ -49,7 +49,7 @@ export class ChatGptTraining {
         }
         return false
     }
-    async train(folderPath?: string, meta?: ChatGptTrainingMeta[]) {
+    async train(folderPath?: string, meta?: ChatGptTrainingMeta[], options?: any) {
         this.cgpt.conversationId = 'new'
         let start = 0
         let ckkp;
@@ -86,7 +86,7 @@ export class ChatGptTraining {
                     train.text = fs.readFileSync(path.join(folderPath || '', train.file)).toString()
                 }
                 if (train.text) {
-                    let resp = await this.cgpt.query(train.text)
+                    let resp = await this.cgpt.query(train.text, options)
                     this.checkpoint(checkpointKey, start, this.cgpt.conversationId, (ckkp?.retries || 0) + 1)
                     if (!resp?.response) {
                         throw new Error('Training failed as no response from chatgpt. Please try training again')

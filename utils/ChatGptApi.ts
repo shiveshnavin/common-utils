@@ -47,7 +47,7 @@ export class ChatGptApi {
         return false
     }
 
-    async query(prompt: string): Promise<ChatGptResponse | undefined> {
+    async query(prompt: string, options?: any): Promise<ChatGptResponse | undefined> {
 
         let retryCountLeft = this.retries
         if (!this.conversationId) {
@@ -62,6 +62,7 @@ export class ChatGptApi {
                 let response = await this.axios.post(`${this.endpoint}/query`, {
                     text: prompt,
                     "options": {
+                        ...options,
                         "conversationId": this.conversationId
                     }
                 })
