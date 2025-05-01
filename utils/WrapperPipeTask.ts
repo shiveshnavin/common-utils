@@ -1,4 +1,6 @@
-import PipeLane, { PipeTask } from "pipelane";
+
+const PipeLane = require('pipelane')
+const { PipeTask } = PipeLane
 
 export class WrapperPipeTask extends PipeTask<any, any> {
 
@@ -22,7 +24,7 @@ export class WrapperPipeTask extends PipeTask<any, any> {
         }
         return true;
     }
-    async execute(pipeWorksInstance: PipeLane, inputs: any): Promise<any[]> {
+    async execute(pipeWorksInstance: typeof PipeLane, inputs: any): Promise<any[]> {
         var that = this;
         return this.onExecute(pipeWorksInstance, inputs, (onKill) => {
             that.onKillCmd = onKill
