@@ -13,11 +13,6 @@ export interface OriginalManuscript {
     meta: Meta
 }
 
-export interface SectionMedia {
-    path: string
-    durationSec?: number
-    type: 'image' | 'video'
-}
 
 export class Transcript {
     title: string
@@ -29,17 +24,22 @@ export class Transcript {
     dialog: string[]
     imageAbsPathsOriginal: SectionMedia[]
     index: number
-    transition_type: 'graphical' | 'geometrial'
+    transition_type: 'graphical' | 'geometrial' | 'none'
     transition_file: string
     transition_duration_sec: number
     status: boolean
+    //@deprecated
     imageAbsPaths: SectionMedia[]
+    mediaAbsPaths: SectionMedia[]
     audioFullPath: string
     audioCaptionFile: string
+    audioCaption: Group | undefined
     durationInSeconds: number
     duration: number // duration in frames 
     offset: number // offset in frames
-    extras: any
+    extras: {
+        template: string | undefined // e.g. motivational-2-liner (instagram) | index (paperdrive) | page  (paperdrive)
+    } & any
     bubble: {
         imageAbsPath?: string
         text?: string
@@ -145,4 +145,30 @@ export interface Speaker {
 export interface TenantVideoConfig {
     introFile: string
     outroFile: string
+}
+
+
+export interface Word {
+    phenomes: Array<any>
+    start: number // start time of word (relative to group) in seconds
+    end: number // end time word (relative to group) in seconds
+    startOffset: number // position of the first character of the word in the transcript (in group)
+    endOffset: number // position of the last character of the word in the transcript (in group)
+    idx: number
+    sentence_end: boolean
+    case: "success" | "failure"
+    alignedWord: string
+    word: string
+    textStyle: any & {
+        color: string
+        fontSize: string
+    }
+}
+
+
+export interface Group {
+    transcript: string
+    words: Word[]
+    start: Number
+    end: Number
 }
