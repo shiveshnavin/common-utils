@@ -46,7 +46,7 @@ export function ZipFiles(filesToExport: string[], outputPath: string): Promise<n
 
     archive.on('warning', (err) => {
         if (err.code === 'ENOENT') {
-            console.warn('Archive warning:', err);
+            // console.warn('Archive warning:', err);
         } else {
             throw err;
         }
