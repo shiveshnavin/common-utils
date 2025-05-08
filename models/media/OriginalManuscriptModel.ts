@@ -33,6 +33,7 @@ export class Transcript {
     mediaAbsPaths: SectionMedia[]
     audioFullPath: string
     audioCaptionFile: string
+    audioStartOffsetSec: number
     audioCaption: Group | undefined
     durationInSeconds: number
     duration: number // duration in frames 
