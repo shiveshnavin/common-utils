@@ -38,7 +38,7 @@ export class Vault {
         return Utils.readFileToString(credPath)
     }
 
-    readCredSyncJson<T>(relativePath: string): Record<any, any> | T | undefined {
+    readCredSyncJson<T>(relativePath: string): Record<any, any> | T | any | undefined {
         let credPath = path.join(this.basePath, relativePath)
         if (!Utils.existsFileSync(credPath)) {
             return undefined
