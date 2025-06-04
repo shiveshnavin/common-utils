@@ -42,7 +42,8 @@ export interface AuthMethodConfig {
     encryptJwtInCallbackUrl?: (req: Request, token: string) => string, // Double encrypt JWT when passed in callback urls using this key (for googlesignin)
     mailer?: Mailer,
     password?: {
-        changePasswordPath: string,
+        secret?: string
+        changePasswordPath: string 
         usePlainText: boolean
     },
     google?: {
@@ -164,7 +165,7 @@ export function createAuthMiddleware(
     const authApp = express.Router()
     authApp.use(cookies())
 
-    let secret = Utils.getKeySync('auth.secret') || config.google?.creds?.web?.private_key
+    let secret = config.password?.secret || Utils.getKeySync('auth.secret') || config.google?.creds?.web?.private_key
     let appname = Utils.getKeySync('appname') || 'Auth'
 
     if (!secret) {
