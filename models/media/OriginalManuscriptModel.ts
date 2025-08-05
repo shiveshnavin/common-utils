@@ -22,14 +22,15 @@ export class Transcript {
     imageTexts: string[]
     videoText: string[]
     dialog: string[]
-    imageAbsPathsOriginal: SectionMedia[]
     index: number
     transition_type: 'graphical' | 'geometrial' | 'none'
     transition_file: string
     transition_duration_sec: number
     status: boolean
-    //@deprecated
+
+    //@deprecated in favor of mediaAbsPaths
     imageAbsPaths: SectionMedia[]
+
     mediaAbsPaths: SectionMedia[]
     audioFullPath: string
     audioCaptionFile: string
@@ -38,9 +39,7 @@ export class Transcript {
     durationInSeconds: number
     duration: number // duration in frames 
     offset: number // offset in frames
-    extras: {
-        template: string | undefined // e.g. motivational-2-liner (instagram) | index (paperdrive) | page  (paperdrive)
-    } & any
+    extras: Extra
     bubble: {
         imageAbsPath?: string
         text?: string
@@ -74,11 +73,11 @@ export interface Meta {
     renderComposition: string;
     bundleUrl: string;
     filesRootDir: string
+    title: string
     posterTitle: string
     videoTitleOverride: string
     summary: string
     tags: string
-    title: string
     posterImage: string
     countLeft: number
     amazonAffiliateLink: string
@@ -172,4 +171,21 @@ export interface Group {
     words: Word[]
     start: Number
     end: Number
+}
+
+// Extras
+export interface Extra extends any {
+    template: string
+    | "motivational-2-liner" //(instagram) 
+    | "index"  //(paperdrive) 
+    | "page"  //(paperdrive)
+    | "poster-single-text-with-bg" //(poster single text with bg)
+}
+
+export interface PosterSingleTextWithBGExtra extends Extra {
+    textColor?: string
+    bgImagePath?: string
+    textBgColor?: string
+    brightColor?: string
+    emphasisOnImage?: boolean
 }
