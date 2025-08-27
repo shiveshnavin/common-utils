@@ -10,7 +10,7 @@ export class FileUploader {
 
   /**
    * 
-   * @param service oracle
+   * @param service semibit
    * @param creds {url: -pre-authenticated-url- }
    */
   constructor(service: string, creds: any) {
@@ -19,9 +19,9 @@ export class FileUploader {
   }
 
   async uploadBytes(fileData, filePath) {
-    const oracleAPI = this.creds.url
+    const semibitAPI = this.creds.url
 
-    const uploadUrl = oracleAPI + encodeURIComponent(filePath);
+    const uploadUrl = semibitAPI + encodeURIComponent(filePath);
     await axios.put(uploadUrl, fileData);
     return {
       url: uploadUrl
@@ -29,8 +29,8 @@ export class FileUploader {
   }
 
   targetUploadUrl(fileName) {
-    const oracleAPI = this.creds.url
-    return oracleAPI + encodeURIComponent(fileName)
+    const semibitAPI = this.creds.url
+    return semibitAPI + encodeURIComponent(fileName)
   }
 
   async upload(filePath: string) {
