@@ -573,7 +573,7 @@ export class Utils {
     return filename;
   }
 
-  public static downloadFile(url, fullOutFilePath, isOverwrite = false): any {
+  public static async downloadFile(url, fullOutFilePath, isOverwrite = false): any {
     if (existsSync(fullOutFilePath) && !isOverwrite) {
       console.log("Skipping Download of exisiting file");
       return;
