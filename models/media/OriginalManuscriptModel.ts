@@ -180,6 +180,11 @@ export interface Extra extends any {
     | "index"  //(paperdrive) 
     | "page"  //(paperdrive)
     | "poster-single-text-with-bg" //(poster single text with bg)
+    | "tweet" //(tweet)
+}
+
+export interface TweetExtra extends Extra {
+    textBgColor?: string
 }
 
 export interface PosterSingleTextWithBGExtra extends Extra {
