@@ -181,6 +181,11 @@ export interface Extra extends any {
     | "tweet" //(tweet)
 }
 
+export interface IGReelExtra extends Extra {
+    fontSize: string
+    animation: 'zoom' | 'none'
+}
+
 export interface TweetExtra extends Extra {
     textBgColor?: string
 }
