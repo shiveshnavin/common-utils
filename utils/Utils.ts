@@ -808,4 +808,29 @@ export class Utils {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
+
+
+  public static getContentTypeFromFilename(filename) {
+    const extension = filename.split('.').pop().toLowerCase();
+
+    const contentTypeMap = {
+      jpg: 'image/jpeg',
+      png: 'image/png',
+      mp4: 'video/mp4',
+      mp3: 'audio/mpeg',
+      zip: 'application/zip',
+      rar: 'application/x-rar-compressed',
+      exe: 'application/x-msdownload',
+      mov: 'video/quicktime',
+      jpeg: 'image/jpeg',
+      aac: 'audio/aac',
+      wav: 'audio/wav',
+      pdf: 'application/pdf',
+    };
+
+    const contentType = contentTypeMap[extension];
+
+    // If content type is found, return it; otherwise, return application/octet-stream
+    return contentType ? contentType : 'application/octet-stream';
+  }
 }
