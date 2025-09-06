@@ -4,6 +4,7 @@ import { GenerationConfig } from "./GenerationConfig";
 export interface OriginalManuscript {
     id: string;
     bgMusic: string
+    bgMusicVolume: number // 0 to 1
     bgMusicDuration: number
     status: boolean
     transcriptText: string
@@ -26,10 +27,7 @@ export class Transcript {
     transition_type: 'graphical' | 'geometrial' | 'none'
     transition_file: string
     transition_duration_sec: number
-    status: boolean
-
-    //@deprecated in favor of mediaAbsPaths
-    imageAbsPaths: SectionMedia[]
+    status: boolean 
 
     mediaAbsPaths: SectionMedia[]
     audioFullPath: string
