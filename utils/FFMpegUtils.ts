@@ -14,7 +14,7 @@ function execute(cmd: String, onLog?: Function) {
     let args = parseArgsStringToArgv(cmd)
 
     return new Promise((resolve, reject) => {
-
+        console.log('FFMPEG: ', cmd)
         const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path
         const ffmpeg = spawn(ffmpegPath, args);
         var output = ""
