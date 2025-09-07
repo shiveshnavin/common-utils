@@ -4,7 +4,7 @@ import Downloader from "nodejs-file-downloader";
 import { createHash } from "crypto";
 import axios, { Axios } from "axios";
 import https from "https";
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import { platform } from "os";
 import path from "path";
 import * as OTPAuth from "otpauth";
@@ -573,7 +573,7 @@ export class Utils {
     return filename;
   }
 
-  public static async downloadFile(url, fullOutFilePath, isOverwrite = false): any {
+  public static async downloadFile(url, fullOutFilePath, isOverwrite = false, headers = {}): any {
     if (existsSync(fullOutFilePath) && !isOverwrite) {
       console.log("Skipping Download of exisiting file");
       return;
@@ -588,6 +588,7 @@ export class Utils {
       fileName: fileName,
       cloneFiles: false,
       timeout: 60000,
+      headers
     });
     return downloader.download();
   }
@@ -833,4 +834,83 @@ export class Utils {
     // If content type is found, return it; otherwise, return application/octet-stream
     return contentType ? contentType : 'application/octet-stream';
   }
+
+  static async exec(
+    rawCmd: string,
+    opts?: {
+      isExecutableAllowed?: (cmd: string, allowed: string[]) => boolean;
+      allowedCommands?: string[];
+      onLog?: (...args: any[]) => void;
+    }
+  ): Promise<RunOneResult> {
+    return new Promise<RunOneResult>(resolve => {
+      if (
+        opts?.isExecutableAllowed &&
+        opts?.allowedCommands &&
+        !opts.isExecutableAllowed(rawCmd, opts.allowedCommands)
+      ) {
+        return resolve({
+          status: false,
+          cmd: rawCmd,
+          message: "Command not allowed"
+        });
+      }
+
+      const wrapped = `source ~/.bash_profile >/dev/null 2>&1 || true; ${rawCmd}`;
+      opts?.onLog?.(`Executing: ${rawCmd}`);
+
+      const child = spawn("bash", ["-c", wrapped], {
+        stdio: ["ignore", "pipe", "pipe"]
+      });
+
+      let stdoutBuf = "";
+      let stderrBuf = "";
+
+      child.stdout.on("data", chunk => {
+        const str = chunk.toString();
+        process.stdout.write(str);
+        stdoutBuf += str;
+      });
+
+      child.stderr.on("data", chunk => {
+        const str = chunk.toString();
+        process.stderr.write(str);
+        stderrBuf += str;
+      });
+
+      child.on("close", code => {
+        const trim = (txt: string) =>
+          txt.length > 200
+            ? txt.slice(0, 100) + "\n...snip...\n" + txt.slice(-100)
+            : txt;
+
+        if (code !== 0) {
+          resolve({
+            status: false,
+            cmd: rawCmd,
+            message: `Exited with code ${code}`,
+            stdout: trim(stdoutBuf),
+            stderr: trim(stderrBuf)
+          });
+        } else {
+          resolve({
+            status: true,
+            cmd: rawCmd,
+            output: trim(stdoutBuf),
+            stderr: trim(stderrBuf)
+          });
+        }
+      });
+    });
+  }
+
+}
+
+export interface RunOneResult {
+  status: boolean;
+  cmd: string;
+  message?: string;
+  output?: string;
+  stdout?: string;
+  stderr?: string;
 }
