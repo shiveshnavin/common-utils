@@ -6,6 +6,10 @@ export interface OriginalManuscript {
     bgMusic: string
     bgMusicVolume: number // 0 to 1
     bgMusicDuration: number
+    hook: {
+        durationSec: number
+        file: string
+    }
     status: boolean
     transcriptText: string
     transcript: Transcript[]
