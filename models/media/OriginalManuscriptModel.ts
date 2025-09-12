@@ -28,7 +28,7 @@ export class Transcript {
     videoText: string[]
     dialog: string[]
     index: number
-    transition_type: 'graphical' | 'geometrial' | 'none'
+    transition_type: 'graphical' | 'geometrial' | 'none' // comma separated
     transition_file: string
     transition_duration_sec: number
     status: boolean 
@@ -69,6 +69,7 @@ export interface SectionMedia {
     durationSec?: number
     type: 'image' | 'video'
     dimensions?: { width: number, height: number }
+
 }
 
 export interface Meta {
