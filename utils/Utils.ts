@@ -130,6 +130,9 @@ export class Utils {
   }
 
   public static refineString(str, replacementChar = "_") {
+    if (!str) {
+      return ""
+    }
     const regexPattern = new RegExp(`[^a-zA-Z0-9]`, "g");
     return str.replace(regexPattern, replacementChar);
   }
