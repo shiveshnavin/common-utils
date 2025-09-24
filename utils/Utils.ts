@@ -907,6 +907,10 @@ export class Utils {
     });
   }
 
+  static toBoolean(val: any) {
+    return val === true || val === '1' || val === 'true' || val === 1;
+  }
+
 }
 
 export interface RunOneResult {
