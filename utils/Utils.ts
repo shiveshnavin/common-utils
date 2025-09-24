@@ -911,6 +911,10 @@ export class Utils {
     return val === true || val === '1' || val === 'true' || val === 1;
   }
 
+  static toNumber(val: any) {
+    return parseInt(`${val}`)
+  }
+
 }
 
 export interface RunOneResult {
