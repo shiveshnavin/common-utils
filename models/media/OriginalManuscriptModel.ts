@@ -31,7 +31,7 @@ export class Transcript {
     transition_type: 'graphical' | 'geometrial' | 'none' // comma separated
     transition_file: string
     transition_duration_sec: number
-    status: boolean 
+    status: boolean
 
     mediaAbsPaths: SectionMedia[]
     audioFullPath: string
@@ -80,6 +80,7 @@ export interface Meta {
     posterTitle: string
     videoTitleOverride: string
     summary: string
+    plugins?: string[]
     tags: string
     posterImage: string
     countLeft: number
