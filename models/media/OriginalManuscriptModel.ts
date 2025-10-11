@@ -72,6 +72,10 @@ export interface SectionMedia {
 
 }
 
+export type Plugin = {
+    name: string
+} & any
+
 export interface Meta {
     renderComposition: string;
     bundleUrl: string;
@@ -80,7 +84,7 @@ export interface Meta {
     posterTitle: string
     videoTitleOverride: string
     summary: string
-    plugins?: string[]
+    plugins?: Plugin[]
     tags: string
     posterImage: string
     countLeft: number
