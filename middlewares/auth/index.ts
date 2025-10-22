@@ -43,7 +43,7 @@ export interface AuthMethodConfig {
     mailer?: Mailer,
     password?: {
         secret?: string
-        changePasswordPath: string 
+        changePasswordPath: string
         usePlainText: boolean
     },
     google?: {
@@ -308,20 +308,22 @@ export function createAuthMiddleware(
         let user: AuthUser = await getUser(email, id)
         let originalPassword = body.password
         let isUpdate = false
+        if (body.password && !usePlainTextPassword) {
+            body.password = Utils.generateHash(body.password, PASSWORD_HASH_LEN)
+        }
         if (user) {
             isUpdate = true
             user.name = body.name
             user.password = body.password || user.password
             user.avatar = body.avatar
+            Utils.log(req, 'User already exists, updating... ' + JSON.stringify(user))
         } else {
             user = body
             user.status = user.status || "UNVERIFIED"
             if (!user.id) {
                 user.id = Utils.generateUID(user.email)
             }
-        }
-        if (user.password && !usePlainTextPassword) {
-            user.password = Utils.generateHash(user.password, PASSWORD_HASH_LEN)
+            Utils.log(req, 'Creating new user...' + JSON.stringify(user))
         }
         user.created = user.created || Date.now()
         let newUser = (saveUser && await saveUser(user, req, res))
@@ -511,7 +513,7 @@ export function createAuthMiddleware(
         authApp.post('/auth/changepassword', async (req, res) => {
 
             try {
-                const newPassword = Utils.generateHash(req.body.newPassword, PASSWORD_HASH_LEN)
+                const newPassword = usePlainTextPassword ? req.body.newPassword : Utils.generateHash(req.body.newPassword, PASSWORD_HASH_LEN)
                 const secretKey = req.body.secret
 
                 const forgotpassword: ForgotPassword = await db.getOne(TABLE_FORGOTPASSWORD, { secret: secretKey })
