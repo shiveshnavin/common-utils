@@ -271,37 +271,9 @@ export function createAuthMiddleware(
     }
 
 
-    saveUser = saveUser || async function (user: AuthUser, _req: Express.Request, _res: Response): Promise<AuthUser> {
+    saveUser = saveUser || CreateDefaultSaveUser(db)
 
-        await db.insert(TABLE_USER, user)
-            .catch(e => {
-                if (e.message.includes("ER_DUP_ENTRY") || e.message.includes("already exists")) {
-                    return db.update(TABLE_USER, { id: user.id }, user).catch(e => {
-                        console.error(`Fatal Error updating user ${user.id} ` + e.message)
-                    })
-                }
-                console.error(`Fatal Error creating user ${user.id} ` + e.message)
-            })
-        delete user.password
-        return user
-    }
-
-    getUser = getUser || async function getUser(email: string, id?: string): Promise<AuthUser | undefined> {
-
-        let filter: any = {
-        }
-        if (email) {
-            filter.email = email
-        }
-        if (id) {
-            filter.id = id
-        }
-        const user = await db.getOne(TABLE_USER, filter)
-        if (user != undefined) {
-            return user
-        }
-        return undefined
-    }
+    getUser = getUser || CreateDefaultGetUser(db)
 
     async function signUpUser(body: AuthUser, req: any, res: any): Promise<AuthUser | undefined> {
         const { email, id } = body
@@ -583,3 +555,36 @@ export function createAuthMiddleware(
 
     return authApp
 }
+
+
+export const CreateDefaultSaveUser = (db: MultiDbORM) => (async function (user: AuthUser, _req: Express.Request, _res: Response): Promise<AuthUser> {
+
+    await db.insert(TABLE_USER, user)
+        .catch(e => {
+            if (e.message.includes("ER_DUP_ENTRY") || e.message.includes("already exists")) {
+                return db.update(TABLE_USER, { id: user.id }, user).catch(e => {
+                    console.error(`Fatal Error updating user ${user.id} ` + e.message)
+                })
+            }
+            console.error(`Fatal Error creating user ${user.id} ` + e.message)
+        })
+    delete user.password
+    return user
+})
+
+export const CreateDefaultGetUser = (db: MultiDbORM) => (async function getUser(email: string, id?: string): Promise<AuthUser | undefined> {
+
+    let filter: any = {
+    }
+    if (email) {
+        filter.email = email
+    }
+    if (id) {
+        filter.id = id
+    }
+    const user = await db.getOne(TABLE_USER, filter)
+    if (user != undefined) {
+        return user
+    }
+    return undefined
+})
