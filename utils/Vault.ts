@@ -1,5 +1,6 @@
 import path from "path"
 import { Utils } from "./Utils"
+import fs from "fs"
 
 export class Vault {
 
@@ -44,5 +45,37 @@ export class Vault {
             return undefined
         }
         return Utils.readFileToObject(credPath)
+    }
+
+
+    readAllCredSyncJson<T>(relativePath: string): Record<string, Record<any, any> | T | any | undefined> {
+        let credPath = path.join(this.basePath, relativePath)
+        if (!Utils.existsFileSync(credPath)) {
+            return {}
+        }
+        if (!Utils.isDirectory(credPath)) {
+            let credData = this.readCredSyncJson(relativePath)
+            return credData ? { [relativePath]: credData } : {}
+        }
+        let creds: Record<string, any> = {}
+        let files = fs.readdirSync(credPath)
+        for (let file of files) {
+            //recursively read all json files in the directory
+            let filePath = path.join(credPath, file)
+            let relativeFilePath = path.join(relativePath, file)
+
+            if (Utils.isDirectory(filePath)) {
+                // Recursively read subdirectories
+                let subCreds = this.readAllCredSyncJson(relativeFilePath)
+                Object.assign(creds, subCreds)
+            } else if (file.endsWith('.json')) {
+                // Only process JSON files
+                let credData = this.readCredSyncJson(relativeFilePath)
+                if (credData) {
+                    creds[relativeFilePath] = credData
+                }
+            }
+        }
+        return creds
     }
 }

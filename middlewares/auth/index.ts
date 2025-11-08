@@ -1,4 +1,3 @@
-//@ts-nocheck
 import express, { Express, Response, Request, Router } from 'express'
 //@ts-ignore
 import { MultiDbORM } from 'multi-db-orm'
@@ -62,6 +61,12 @@ export enum AuthEvents {
     USER_FORGOT_PASSWORD,
     USER_RESET_PASSWORD
 }
+
+
+export const AUTH_TABLE_USER = 'auth_users'
+export const AUTH_TABLE_FORGOTPASSWORD = "forgot_password"
+
+
 /**
  * 
  * @param db Instance of MultiDbORM
@@ -108,8 +113,6 @@ export function createAuthMiddleware(
     logger?: { debug: (...params) => void, error: (...params) => void, info: (...params) => void, warn: (...params) => void, },
     onEvent?: (eventName: AuthEvents, data: any) => void
 ): Router {
-    const TABLE_USER = 'auth_users'
-    const TABLE_FORGOTPASSWORD = "forgot_password"
     const PASSWORD_HASH_LEN = 20
     const usePlainTextPassword = config?.password?.usePlainText || false
 
@@ -125,12 +128,12 @@ export function createAuthMiddleware(
                 access_token: 'stringlarge',
                 id: 'stringsmall',
                 created: 1234,
-                identity: "stringsmall",
+                identity: "stringsmall" as any,
                 password: 'stringsmall',
-                extrajson?: 'stringlarge',
-                status?: 'stringsmall',
+                extrajson: 'stringlarge',
+                status: 'stringsmall' as any,
             }
-            await db.create(TABLE_USER, sampleUser).catch(e => {
+            await db.create(AUTH_TABLE_USER, sampleUser).catch(e => {
 
             })
 
@@ -141,7 +144,7 @@ export function createAuthMiddleware(
                 linkExp: 'number',
                 secret: 'stringsmall'
             }
-            await db.create(TABLE_FORGOTPASSWORD, sampleForgotPaswd).catch(e => {
+            await db.create(AUTH_TABLE_FORGOTPASSWORD, sampleForgotPaswd).catch(e => {
 
             })
         }
@@ -193,6 +196,8 @@ export function createAuthMiddleware(
 
 
     skipAuthRoutes.push('/auth/login')
+    skipAuthRoutes.push('/auth/logout')
+    skipAuthRoutes.push('/auth/signout')
     skipAuthRoutes.push('/auth/google/*')
     skipAuthRoutes.push('/auth/changepassword')
     skipAuthRoutes.push('/auth/forgotpassword')
@@ -207,7 +212,7 @@ export function createAuthMiddleware(
         if (authorization) {
             user = getUserFromAccesstoken(req)
             if (user)
-                req.session.user = user
+                (req as any).session.user = user
         }
         if (skipAuthRoutes?.some((route) => {
             return route.includes("*") ?
@@ -225,7 +230,11 @@ export function createAuthMiddleware(
                     if (user?.status == "INACTIVE") {
                         msg = 'Account locked. Please contact support.'
                     }
-                    res.clearCookie()
+                    if (req.cookies) {
+                        for (const cookieName in req.cookies) {
+                            res.clearCookie(cookieName, { path: '/' })
+                        }
+                    }
                     return handleUnauthenticatedRequest(401, msg, req, res, next)
                 }
                 const accessToken = getAccessTokenFromHeader(req)
@@ -318,7 +327,7 @@ export function createAuthMiddleware(
                 user = getUserFromAccesstoken(req)
             }
             if (user) {
-                const userFromDb: AuthUser = await db.getOne(TABLE_USER, { id: user.id })
+                const userFromDb: AuthUser = await db.getOne(AUTH_TABLE_USER, { id: user.id })
                 user = userFromDb
             }
             if (!user || user?.status == "INACTIVE") {
@@ -338,35 +347,36 @@ export function createAuthMiddleware(
         }
     })
 
-    authApp.get('/auth/logout', async (req, res, next) => {
+    const logout = async (req, res, next) => {
         onEvent && onEvent(AuthEvents.USER_LOGOUT, req.session?.user)
+        if (req.cookies) {
+            for (const cookieName in req.cookies) {
+                res.clearCookie(cookieName, { path: '/' })
+            }
+        }
+        res.clearCookie('access_token', {
+            path: '/',
+            httpOnly: true,
+            secure: false
+        })
         if (req.session?.destroy) {
             req.session.destroy(() => {
-                res.redirect('/')
+                res.redirect('/auth/login')
             })
         }
         else {
             req.session = null
-            res.redirect('/')
+            res.redirect('/auth/login')
         }
-    })
+    }
+    authApp.get('/auth/logout', logout)
+    authApp.get('/auth/signout', logout)
 
     const LoginPageHtml = LoginPage(appname)
     authApp.get('/auth/login', async (req, res, next) => {
         res.send(LoginPageHtml)
     })
-    authApp.get('/auth/signout', async (req, res, next) => {
-        onEvent && onEvent(AuthEvents.USER_LOGOUT, req.session?.user)
-        if (req.session?.destroy) {
-            req.session.destroy(() => {
-                res.redirect('/')
-            })
-        }
-        else {
-            req.session = null
-            res.redirect('/')
-        }
-    })
+
     // if password login is selected, then create signup api
     if (config.password) {
         authApp.post('/auth/signup', async (req, res, next) => {
@@ -428,8 +438,8 @@ export function createAuthMiddleware(
                     delete user.password
                     user.access_token = token
                     onEvent && onEvent(AuthEvents.USER_LOGIN, user)
-                    if (req.query.returnUrl || req.query.returnUri)
-                        res.redirect(req.query.returnUrl || req.query.returnUri);
+                    if (req.query.returnUrl || req.query.returnUri || req.body.returnUrl)
+                        res.redirect((req.query.returnUrl || req.query.returnUri || req.body.returnUrl) as string);
                     else
                         res.send(ApiResponse.ok(user))
                 }
@@ -452,7 +462,7 @@ export function createAuthMiddleware(
             const host = req.get('host') || req.hostname;
             // const host = 'localhost:8081' 
             const link = 'http://' + host + config.password?.changePasswordPath + '?secret=' + secret;
-            const user: AuthUser = await db.getOne(TABLE_USER, { email: email }) //check for email in db and returns whole user row, right side email is value and left is column name
+            const user: AuthUser = await db.getOne(AUTH_TABLE_USER, { email: email }) //check for email in db and returns whole user row, right side email is value and left is column name
 
             if (user == undefined) {
                 return res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
@@ -461,14 +471,14 @@ export function createAuthMiddleware(
                 id: user.id,
                 email: email,
                 link: link,
-                linkExp: Date.now() + 10 * 60 * 1000,
+                linkExp: String(Date.now() + 10 * 60 * 1000),
                 secret
             }
 
             try {
                 //inserting into Database - forgot password
-                await db.delete(TABLE_FORGOTPASSWORD, { id: emailObj.id })
-                await db.insert(TABLE_FORGOTPASSWORD, emailObj)
+                await db.delete(AUTH_TABLE_FORGOTPASSWORD, { id: emailObj.id })
+                await db.insert(AUTH_TABLE_FORGOTPASSWORD, emailObj)
 
                 res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
 
@@ -488,7 +498,7 @@ export function createAuthMiddleware(
                 const newPassword = usePlainTextPassword ? req.body.newPassword : Utils.generateHash(req.body.newPassword, PASSWORD_HASH_LEN)
                 const secretKey = req.body.secret
 
-                const forgotpassword: ForgotPassword = await db.getOne(TABLE_FORGOTPASSWORD, { secret: secretKey })
+                const forgotpassword: ForgotPassword = await db.getOne(AUTH_TABLE_FORGOTPASSWORD, { secret: secretKey })
 
                 if (!forgotpassword) {
                     res.status(400).send(ApiResponse.notOk("Oops ! Looks like the password reset link has expired Please request a new one"))
@@ -497,13 +507,13 @@ export function createAuthMiddleware(
                 const userId = forgotpassword.id
 
                 if (checkLinkExpiry(forgotpassword)) {
-                    await db.update(TABLE_USER, { id: userId }, { password: newPassword })
+                    await db.update(AUTH_TABLE_USER, { id: userId }, { password: newPassword })
                     onEvent && onEvent(AuthEvents.USER_RESET_PASSWORD, { id: userId, newPassword })
                     res.send(ApiResponse.ok("Password updated successfully !"))
-                    await db.delete(TABLE_FORGOTPASSWORD, { id: userId })
+                    await db.delete(AUTH_TABLE_FORGOTPASSWORD, { id: userId })
                 }
                 else {
-                    await db.delete(TABLE_FORGOTPASSWORD, { id: userId })
+                    await db.delete(AUTH_TABLE_FORGOTPASSWORD, { id: userId })
                     res.status(400).send(ApiResponse.notOk("Password link expired, Request a new one"))
                 }
             }
@@ -559,10 +569,10 @@ export function createAuthMiddleware(
 
 export const CreateDefaultSaveUser = (db: MultiDbORM) => (async function (user: AuthUser, _req: Express.Request, _res: Response): Promise<AuthUser> {
 
-    await db.insert(TABLE_USER, user)
+    await db.insert(AUTH_TABLE_USER, user)
         .catch(e => {
             if (e.message.includes("ER_DUP_ENTRY") || e.message.includes("already exists")) {
-                return db.update(TABLE_USER, { id: user.id }, user).catch(e => {
+                return db.update(AUTH_TABLE_USER, { id: user.id }, user).catch(e => {
                     console.error(`Fatal Error updating user ${user.id} ` + e.message)
                 })
             }
@@ -582,7 +592,7 @@ export const CreateDefaultGetUser = (db: MultiDbORM) => (async function getUser(
     if (id) {
         filter.id = id
     }
-    const user = await db.getOne(TABLE_USER, filter)
+    const user = await db.getOne(AUTH_TABLE_USER, filter)
     if (user != undefined) {
         return user
     }

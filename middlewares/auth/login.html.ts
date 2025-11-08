@@ -58,6 +58,7 @@ export default function LoginPage(appname?: string) {
     <div class="login-container">
       <h4>Login ${appname ? 'to ' + appname : ''}</h4>
       <form method="POST">
+        <input type="hidden" id="returnUrl" name="returnUrl" value="/" hidden />
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required />
         <label for="password">Password:</label>

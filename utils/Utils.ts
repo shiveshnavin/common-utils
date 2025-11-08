@@ -502,6 +502,15 @@ export class Utils {
     Utils.writeFileString(path, JSON.stringify(obj, null, 2));
   }
 
+  public static isDirectory(relativePath: string): boolean {
+    let fullPath = path.join(relativePath)
+    try {
+      return fs.lstatSync(fullPath).isDirectory()
+    } catch (error) {
+      return false
+    }
+  }
+
   public static readFileToObject(path) {
     if (!fs.existsSync(path)) {
       return undefined;

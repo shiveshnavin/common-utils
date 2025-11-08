@@ -35,7 +35,6 @@ export interface ForgotPassword {
     id: string
     email: string
     link: string
-    linkGen: string
     linkExp: string
     secret: string
 }
