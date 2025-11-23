@@ -78,6 +78,7 @@ export interface SectionMedia {
     durationSec?: number
     type: 'image' | 'video'
     dimensions?: { width: number, height: number }
+    prompt?: MediaTextPrompt
 
 }
 
