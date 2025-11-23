@@ -59,6 +59,7 @@ export class Transcript {
 export interface MediaTextPrompt {
     prompt: string
     type: 'image' | 'video'
+    caption?: string
     fromSec?: number
     toSec?: number
     durationSec?: number
