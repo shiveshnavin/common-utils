@@ -26,7 +26,7 @@ export class Transcript {
     imageText: string[] // deprecated
     imageTexts: string[] // deprecated in favor of mediaTextPrompts
     mediaTextPrompts: MediaTextPrompt[]
-    videoText: string[]
+    videoText: string[]  // deprecated
     dialog: string[]
     index: number
     transition_type: 'graphical' | 'geometrial' | 'none' // comma separated
