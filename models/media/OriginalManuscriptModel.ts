@@ -24,7 +24,8 @@ export class Transcript {
     text: string
     pointers: string[]
     imageText: string[] // deprecated
-    imageTexts: string[]
+    imageTexts: string[] // deprecated in favor of mediaTextPrompts
+    mediaTextPrompts: MediaTextPrompt[]
     videoText: string[]
     dialog: string[]
     index: number
@@ -54,6 +55,14 @@ export class Transcript {
     }
 }
 
+
+export interface MediaTextPrompt {
+    prompt: string
+    type: 'image' | 'video'
+    fromSec?: number
+    toSec?: number
+    durationSec?: number
+}
 
 export interface Speaker {
     wps: number
