@@ -578,6 +578,36 @@ export class Utils {
     return codeBlocks;
   }
 
+  public static extractJsonFromMarkdown(str) {
+    str = str.trim();
+    let start = str.indexOf('{');
+    if (start === -1) return null;
+    let end = str.lastIndexOf('}');
+    if (end === -1) return null;
+    let jsonStr = str.slice(start, end + 1);
+
+    let inQuotes = false;
+    let sanitized = '';
+    for (let i = 0; i < jsonStr.length; i++) {
+      let char = jsonStr[i];
+      if (char === '"' && jsonStr[i - 1] !== '\\') {
+        inQuotes = !inQuotes;
+      }
+      if (inQuotes && (char === '\n' || char === '\r' || char === '\r\n')) {
+        sanitized += '\\n';
+      } else if (inQuotes && (char === '\r' || char === '\n')) {
+        sanitized += '\\n';
+      } else {
+        sanitized += char;
+      }
+    }
+    try {
+      return JSON.parse(sanitized);
+    } catch (e) {
+      return null;
+    }
+  }
+
   public static splitArray(arr, pieces) {
     let result = [];
     let chunkSize = Math.ceil(arr.length / pieces);
