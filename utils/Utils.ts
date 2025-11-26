@@ -218,6 +218,16 @@ export class Utils {
     return prefs;
   }
 
+  public static isJson(str) {
+    try {
+      JSON.parse(str);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+
   public static findObjDiff(objectOld, objectNew) {
     return (function deepObjectDiff(obj1, obj2) {
       const diff = {};
