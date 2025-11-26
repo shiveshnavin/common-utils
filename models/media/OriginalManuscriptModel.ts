@@ -63,7 +63,6 @@ export interface MediaTextPrompt {
     fromSec?: number
     toSec?: number
     durationSec?: number
-    animExtra?: Extra
 }
 
 export interface Speaker {
@@ -81,6 +80,7 @@ export interface SectionMedia {
     type: 'image' | 'video'
     dimensions?: { width: number, height: number }
     prompt?: MediaTextPrompt
+    animExtra?: Extra
 }
 
 export type Plugin = {
