@@ -4,11 +4,11 @@ import { spawn } from 'child_process';
 import { parseArgsStringToArgv } from 'string-argv';
 
 var ffmpeg;
-function execute(cmd: String, onLog?: Function) {
+function execute(cmd: String, onLog?: Function, isRawCmd = false): Promise<string> {
     if (!onLog)
         onLog = console.log
     cmd = cmd.replace('ffmpeg', "")
-    if (cmd.indexOf('-y') == -1) {
+    if (cmd.indexOf('-y') == -1 && !isRawCmd) {
         cmd = cmd + " -y"
     }
     let args = parseArgsStringToArgv(cmd)
