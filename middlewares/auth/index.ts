@@ -159,10 +159,10 @@ export function createAuthMiddleware(
         else
             config.mailer = new Mailer({
                 ...MailConfig,
-                app: 'Semibit',
-                company: 'Semibit Technologies',
-                instagram: "https://instagram.com/semibitin",
-                website: "https://www.semibit.in",
+                app: 'MyCompany',
+                company: 'MyCompany Technologies',
+                instagram: "https://instagram.com/MyCompany",
+                website: "https://www.MyCompany.in",
             })
     }
     const authApp = express.Router()

@@ -120,8 +120,6 @@ function getMediaMetadata(pathToMedia): Promise<{
 
 }
 
-// getMediaMetadata('D:\\code\\node_projects\\semibitmedia\\out\\output_6e59f8dcc9.mp4')
-
 // joinAudios(['../../public/test/1.mp3', '../../public/test/2.mp3', '../../public/test/3.mp3'], '../../public/test/op.mp3')
 const FFMpegUtils = {
     execute,

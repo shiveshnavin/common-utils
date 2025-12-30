@@ -29,7 +29,7 @@ export class Vault {
     /**
      * 
      * @param relativePath Relative path considering common-creds at root
-     * e.g. semibit/mysql-core.json
+     * e.g. mycreds/mysql-core.json
      */
     readCredSync(relativePath: string): string | undefined {
         let credPath = path.join(this.basePath, relativePath)

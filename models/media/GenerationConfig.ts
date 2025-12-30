@@ -8,7 +8,7 @@ export interface GenerationConfig {
         schedule?: Schedule
     },
     genId?: string,
-    renderComposition?: 'SemibitComposition'
+    renderComposition?: 'MyComposition'
     platform?: 'youtube' | 'instagram' | 'linkedin'
     isDoParaphraseSource?: boolean,
     playlistName?: string,

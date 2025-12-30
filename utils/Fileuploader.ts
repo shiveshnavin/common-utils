@@ -10,7 +10,7 @@ export class FileUploader {
 
   /**
    * 
-   * @param service semibit
+   * @param service my
    * @param creds {url: -pre-authenticated-url- }
    */
   constructor(service: string, creds: any) {
@@ -19,9 +19,9 @@ export class FileUploader {
   }
 
   async uploadBytes(fileData, filePath) {
-    const semibitAPI = this.creds.url
+    const myAPI = this.creds.url
 
-    const uploadUrl = semibitAPI + encodeURIComponent(filePath);
+    const uploadUrl = myAPI + encodeURIComponent(filePath);
     await axios.put(uploadUrl, fileData);
     return {
       url: uploadUrl
@@ -29,8 +29,8 @@ export class FileUploader {
   }
 
   targetUploadUrl(fileName) {
-    const semibitAPI = this.creds.url
-    return semibitAPI + encodeURIComponent(fileName)
+    const myAPI = this.creds.url
+    return myAPI + encodeURIComponent(fileName)
   }
 
   async upload(filePath: string) {
