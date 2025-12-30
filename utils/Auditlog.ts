@@ -1,7 +1,7 @@
-import { Logging } from "@google-cloud/logging"
+let Logging: any
 import fs from 'fs'
 import { PerformanceRecorder } from "./PerformanceRecorder"
-import { LogEntry } from "@google-cloud/logging/build/src/entry"
+
 import { Utils } from "./Utils"
 export class Auditlog {
     private appname
@@ -10,11 +10,18 @@ export class Auditlog {
     constructor(appname: string, credsfile: any) {
         this.appname = appname
         this.credsjson = JSON.parse(fs.readFileSync(credsfile).toString());
-        this.logging = new Logging({
-            projectId: credsfile.project_id,
-            keyFilename: credsfile
-        });
+    }
 
+    async init() {
+        if (!Logging) {
+            //@ts-ignore
+            Logging = (await import("@google-cloud/logging")).Logging;
+        }
+        this.logging = new Logging({
+            projectId: this.credsjson.project_id,
+            keyFilename: this.credsjson
+        });
+        return this;
     }
 
 
@@ -23,7 +30,7 @@ export class Auditlog {
         return new AuditlogEvent(this.appname, logname, action, this.logging)
     }
 
-    public static get(appname?: string): Auditlog {
+    public static async get(appname?: string): Promise<Auditlog> {
         let configJson: string
         let credsFile = 'audit_log_creds.json'
 
@@ -42,6 +49,7 @@ export class Auditlog {
             throw new Error('Must provide audit_log_creds in config.json or create a file `audit_log_creds.json` in root dir')
         }
         let logger = new Auditlog(appname, credsFile)
+        await logger.init()
         return logger
     }
 
@@ -69,7 +77,7 @@ export class AuditlogEvent {
         appname: string,
         logname: string,
         action: string,
-        logging: Logging) {
+        logging: any) {
         this.data.appname = appname
         this.data.action = action
         this.log = logging.log(logname)
@@ -119,7 +127,7 @@ export class AuditlogEvent {
             this.data.status = status
         }
         let opid = this.data.corrid || this.data.action + "-" + Utils.generateRandomID(10)
-        const metadata: LogEntry = {
+        const metadata: any = {
             labels: {
                 //@ts-ignore
                 'appname': this.data.appname,

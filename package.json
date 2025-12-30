@@ -23,7 +23,6 @@
   "dependencies": {
     "node-fetch-commonjs": "^3.2.4",
     "nodejs-file-downloader": "^4.11.0",
-    "@google-cloud/logging": "^11.0.0",
     "axios": "^1.3.5",
     "big-integer": "^1.6.51",
     "cookie-parser": "^1.4.6",
@@ -37,5 +36,7 @@
     "otpauth-migration-parser": "^0.1.1",
     "string-argv": "^0.3.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@google-cloud/logging": "^11.0.0"
+  }
 }
