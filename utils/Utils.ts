@@ -592,6 +592,9 @@ export class Utils {
   }
 
   public static extractJsonFromMarkdown(str) {
+    try {
+      return JSON.parse(str)
+    } catch (e) { }
     str = str.trim();
     let start = str.indexOf('{');
     if (start === -1) return null;
