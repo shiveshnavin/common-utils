@@ -66,6 +66,33 @@ export enum AuthEvents {
 export const AUTH_TABLE_USER = 'auth_users'
 export const AUTH_TABLE_FORGOTPASSWORD = "forgot_password"
 
+export interface AuthMiddlewareOptions {
+    db: MultiDbORM,
+    app: Express,
+    skipAuthForRoutes: string[],
+    config: AuthMethodConfig,
+    logLevel: 0 | 1 | 2 | 3 | 4,
+    sessionMiddlware?: (config: any) => any,
+    getUser?: (email: string, id?: string) => Promise<AuthUser | undefined>,
+    saveUser?: (user: AuthUser, req: any, res: any) => Promise<AuthUser>,
+    handleUnauthenticatedRequest: (
+        status: number,
+        reason: string,
+        req: Request,
+        res: Response,
+        next: Function) => void,
+    logger?: { debug: (...params) => void, error: (...params) => void, info: (...params) => void, warn: (...params) => void, },
+    onEvent?: (eventName: AuthEvents, data: any) => void,
+    generateUserJwt?: (
+        payload: AuthUser & JwtPayloadOptions,
+        secret?: string,
+        expiresInSec?: number) => string,
+    validateAndParseJwt?: (token: string, secret?: string) => AuthUser | null
+}
+export function createAuthMiddlewareV2() {
+
+}
+
 
 /**
  * 
