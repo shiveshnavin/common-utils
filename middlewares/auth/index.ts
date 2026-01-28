@@ -27,13 +27,29 @@ export type JwtPayloadOptions = {
     scope?: string,
 }
 
-export function generateUserJwt(
+export function generateUserJwtDefault(
     payload: AuthUser & JwtPayloadOptions,
     secret: string,
     expiresInSec: number = 7200) {
     if (typeof payload == 'object')
         payload = JSON.parse(JSON.stringify(payload))
     return jwt.sign(payload, secret, { expiresIn: `${expiresInSec}s`, algorithm: 'HS256' })
+}
+
+export function validateAndParseJwtDefault(token: string, secret?: string): AuthUser | null {
+    try {
+        let ok = jwt.verify(token, secret)
+        if (!ok)
+            return null
+    } catch (e: any) {
+        return null
+    }
+
+    let decoded = jwt.decode(token, {
+        json: true,
+        complete: true
+    })
+    return decoded?.payload as AuthUser
 }
 
 export interface AuthMethodConfig {
@@ -72,10 +88,10 @@ export interface AuthMiddlewareOptions {
     skipAuthForRoutes: string[],
     config: AuthMethodConfig,
     logLevel: 0 | 1 | 2 | 3 | 4,
-    sessionMiddlware?: (config: any) => any,
+    sessionMiddleware?: (config: any) => any,
     getUser?: (email: string, id?: string) => Promise<AuthUser | undefined>,
     saveUser?: (user: AuthUser, req: any, res: any) => Promise<AuthUser>,
-    handleUnauthenticatedRequest: (
+    handleUnauthenticatedRequest?: (
         status: number,
         reason: string,
         req: Request,
@@ -89,13 +105,26 @@ export interface AuthMiddlewareOptions {
         expiresInSec?: number) => string,
     validateAndParseJwt?: (token: string, secret?: string) => AuthUser | null
 }
-export function createAuthMiddlewareV2() {
-
+export function createAuthMiddlewareV2(config: AuthMiddlewareOptions): Router {
+    return createAuthMiddleware(
+        config.db,
+        config.app,
+        config.skipAuthForRoutes,
+        config.sessionMiddleware,
+        config.getUser,
+        config.saveUser,
+        config.logLevel,
+        config.config,
+        config.handleUnauthenticatedRequest,
+        config.logger,
+        config.onEvent,
+        config.generateUserJwt,
+        config.validateAndParseJwt
+    )
 }
 
 
 /**
- * 
  * @param db Instance of MultiDbORM
  * @param app 
  * @param skipAuthRoutes 
@@ -138,7 +167,12 @@ export function createAuthMiddleware(
             res.status(status).send(ApiResponse.notOk(reason))
         },
     logger?: { debug: (...params) => void, error: (...params) => void, info: (...params) => void, warn: (...params) => void, },
-    onEvent?: (eventName: AuthEvents, data: any) => void
+    onEvent?: (eventName: AuthEvents, data: any) => void,
+    generateUserJwt: (
+        payload: AuthUser & JwtPayloadOptions,
+        secret?: string,
+        expiresInSec?: number) => string = generateUserJwtDefault,
+    validateAndParseJwt: (token: string, secret?: string) => AuthUser | null = validateAndParseJwtDefault
 ): Router {
     const PASSWORD_HASH_LEN = 20
     const usePlainTextPassword = config?.password?.usePlainText || false
@@ -291,19 +325,7 @@ export function createAuthMiddleware(
     }
     function getUserFromAccesstoken(req: any) {
         let token = getAccessTokenFromHeader(req)
-        try {
-            let ok = jwt.verify(token, secret)
-            if (!ok)
-                return undefined
-        } catch (e: any) {
-            return undefined
-        }
-
-        let decoded = jwt.decode(token, {
-            json: true,
-            complete: true
-        })
-        return decoded?.payload as AuthUser
+        return validateAndParseJwt(token, secret);
     }
 
 

@@ -48,7 +48,11 @@ export function GoogleSigninMiddleware(
     }
 
     function generateGoogleAuthUrl(authCallback: string, signin_callback?: string) {
-        let scopesString = scopes.join(" ")
+        let defaultScopes = [
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile"
+        ]
+        let scopesString = (scopes || defaultScopes).join(" ")
         let authUrl = oAuth2Client.generateAuthUrl({
             access_type: "offline",
             scope: scopesString,
