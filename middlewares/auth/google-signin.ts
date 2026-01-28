@@ -91,8 +91,9 @@ export function GoogleSigninMiddleware(
             const usr = {
                 name: name,
                 avatar: picture,
-                email: email
-            }
+                email: email,
+                status: "ACTIVE"
+            } as AuthUser
             Utils.logPlainWithLevel(4, "Google signin success:", usr)
             saveAndRedirectUser(usr, returnUrl, req, res)
         } catch (e: any) {

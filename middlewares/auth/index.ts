@@ -27,7 +27,7 @@ export type JwtPayloadOptions = {
     scope?: string,
 }
 
-export function generateUserJwtDefault(
+export async function generateUserJwtDefault(
     payload: AuthUser & JwtPayloadOptions,
     secret: string,
     expiresInSec: number = 7200) {
@@ -36,7 +36,7 @@ export function generateUserJwtDefault(
     return jwt.sign(payload, secret, { expiresIn: `${expiresInSec}s`, algorithm: 'HS256' })
 }
 
-export function validateAndParseJwtDefault(token: string, secret?: string): AuthUser | null {
+export async function validateAndParseJwtDefault(token: string, secret?: string): Promise<AuthUser | null> {
     try {
         let ok = jwt.verify(token, secret)
         if (!ok)
@@ -102,8 +102,8 @@ export interface AuthMiddlewareOptions {
     generateUserJwt?: (
         payload: AuthUser & JwtPayloadOptions,
         secret?: string,
-        expiresInSec?: number) => string,
-    validateAndParseJwt?: (token: string, secret?: string) => AuthUser | null
+        expiresInSec?: number) => Promise<string>,
+    validateAndParseJwt?: (token: string, secret?: string) => Promise<AuthUser | null>
 }
 export function createAuthMiddlewareV2(config: AuthMiddlewareOptions): Router {
     return createAuthMiddleware(
@@ -171,8 +171,8 @@ export function createAuthMiddleware(
     generateUserJwt: (
         payload: AuthUser & JwtPayloadOptions,
         secret?: string,
-        expiresInSec?: number) => string = generateUserJwtDefault,
-    validateAndParseJwt: (token: string, secret?: string) => AuthUser | null = validateAndParseJwtDefault
+        expiresInSec?: number) => Promise<string> = generateUserJwtDefault,
+    validateAndParseJwt: (token: string, secret?: string) => Promise<AuthUser | null> = validateAndParseJwtDefault
 ): Router {
     const PASSWORD_HASH_LEN = 20
     const usePlainTextPassword = config?.password?.usePlainText || false
@@ -373,7 +373,7 @@ export function createAuthMiddleware(
             //@ts-ignore
             let user = req.session?.user as AuthUser
             if (!user) {
-                user = getUserFromAccesstoken(req)
+                user = await getUserFromAccesstoken(req)
             }
             if (user) {
                 const userFromDb: AuthUser = await db.getOne(AUTH_TABLE_USER, { id: user.id })
@@ -452,8 +452,8 @@ export function createAuthMiddleware(
                 return res.status(400).send(ApiResponse.notOk('email, password cannot be empty'))
             }
             req.body.identity = "email"
-            signUpUser(req.body, req, res).then((user) => {
-                let token = generateUserJwt(user!, secret, config.expiresInSec)
+            signUpUser(req.body, req, res).then(async (user) => {
+                let token = await generateUserJwt(user!, secret, config.expiresInSec)
                 addAccessToken(res, token)
                 user!.access_token = token
                 delete user?.password
@@ -482,7 +482,7 @@ export function createAuthMiddleware(
                     hashPassword = password
                 }
                 if (user.password == hashPassword) {
-                    let token = generateUserJwt(user!, secret, config.expiresInSec)
+                    let token = await generateUserJwt(user!, secret, config.expiresInSec)
                     addAccessToken(res, token)
                     delete user.password
                     user.access_token = token
@@ -593,7 +593,7 @@ export function createAuthMiddleware(
             user.identity = "google"
             let loggedInUser = await signUpUser(user, req, res) as AuthUser
             if (!res.headersSent) {
-                let token = generateUserJwt(loggedInUser, secret, config.expiresInSec)
+                let token = await generateUserJwt(loggedInUser, secret, config.expiresInSec)
 
                 req.session.access_token = token
                 if (config.encryptJwtInCallbackUrl) {
