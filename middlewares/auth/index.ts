@@ -303,7 +303,7 @@ export function createAuthMiddleware(
             json: true,
             complete: true
         })
-        return decoded?.payload
+        return decoded?.payload as AuthUser
     }
 
 
@@ -625,3 +625,21 @@ export const CreateDefaultGetUser = (db: MultiDbORM) => (async function getUser(
     }
     return undefined
 })
+
+export type AppInfo = {
+    version?: string;
+    platform?: string;
+}
+
+export function getAppInfo(req: Request): AppInfo {
+    let appInfo: AppInfo = {}
+    const version = req.headers['x-app-version']
+    const platform = req.headers['x-app-platform']
+    if (version && typeof version === 'string') {
+        appInfo.version = version
+    }
+    if (platform && typeof platform === 'string') {
+        appInfo.platform = platform
+    }
+    return appInfo
+}
