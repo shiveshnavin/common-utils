@@ -267,11 +267,11 @@ export function createAuthMiddleware(
     }
     authApp.use(bodyParser.urlencoded())
     authApp.use(bodyParser.json())
-    authApp.use((req, res, next) => {
+    authApp.use(async (req, res, next) => {
         let authorization: string = (req.headers['authorization'] || req.query.authorization) as string || (req.cookies && req.cookies['access_token'])
         let user;
         if (authorization) {
-            user = getUserFromAccesstoken(req)
+            user = await getUserFromAccesstoken(req)
             if (user)
                 (req as any).session.user = user
         }
@@ -323,9 +323,9 @@ export function createAuthMiddleware(
         }
         return token
     }
-    function getUserFromAccesstoken(req: any) {
+    async function getUserFromAccesstoken(req: any) {
         let token = getAccessTokenFromHeader(req)
-        return validateAndParseJwt(token, secret);
+        return await validateAndParseJwt(token, secret);
     }
 
 
