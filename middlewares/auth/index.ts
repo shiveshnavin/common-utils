@@ -325,7 +325,10 @@ export function createAuthMiddleware(
     }
     async function getUserFromAccesstoken(req: any) {
         let token = getAccessTokenFromHeader(req)
-        return await validateAndParseJwt(token, secret);
+        return await validateAndParseJwt(token, secret).catch(e => {
+            Utils.log(req, 'Error validating jwt token. ' + e.message);
+            return null;
+        });;
     }
 
 
