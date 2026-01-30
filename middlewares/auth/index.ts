@@ -52,6 +52,22 @@ export async function validateAndParseJwtDefault(token: string, secret?: string)
     return decoded?.payload as AuthUser
 }
 
+
+export function getAccessTokenFromHeaderDefault(req: any) {
+    return (req.headers['authorization']?.replace("Bearer ", "") || req.query.authorization) as string || (req.cookies && req.cookies['access_token'])
+}
+
+export function setAccessTokenInResponseDefault(req: any, res: any, token: string, expiresInSec: number) {
+    res.cookie('access_token', token, {
+        maxAge: expiresInSec * 1000,
+        httpOnly: true,
+        secure: false,
+        path: '/',
+    });
+    res.setHeader('access_token', token);
+    res.setHeader('Set-Cookie', `access_token=${token}; Expires=${new Date(Date.now() + expiresInSec * 1000).toUTCString()}; Secure; Path=/`);
+}
+
 export interface AuthMethodConfig {
     expiresInSec: number,
     encryptJwtInCallbackUrl?: (req: Request, token: string) => string, // Double encrypt JWT when passed in callback urls using this key (for googlesignin)
@@ -103,7 +119,9 @@ export interface AuthMiddlewareOptions {
         payload: AuthUser & JwtPayloadOptions,
         secret?: string,
         expiresInSec?: number) => Promise<string>,
-    validateAndParseJwt?: (token: string, secret?: string) => Promise<AuthUser | null>
+    validateAndParseJwt?: (token: string, secret?: string) => Promise<AuthUser | null>,
+    getAccessTokenFromHeader?: (req: any) => string,
+    setAccessTokenInResponse?: (req: any, res: any, token: string, expiry: number) => void,
 }
 export function createAuthMiddlewareV2(config: AuthMiddlewareOptions): Router {
     return createAuthMiddleware(
@@ -119,7 +137,9 @@ export function createAuthMiddlewareV2(config: AuthMiddlewareOptions): Router {
         config.logger,
         config.onEvent,
         config.generateUserJwt,
-        config.validateAndParseJwt
+        config.validateAndParseJwt,
+        config.getAccessTokenFromHeader,
+        config.setAccessTokenInResponse
     )
 }
 
@@ -172,7 +192,9 @@ export function createAuthMiddleware(
         payload: AuthUser & JwtPayloadOptions,
         secret?: string,
         expiresInSec?: number) => Promise<string> = generateUserJwtDefault,
-    validateAndParseJwt: (token: string, secret?: string) => Promise<AuthUser | null> = validateAndParseJwtDefault
+    validateAndParseJwt: (token: string, secret?: string) => Promise<AuthUser | null> = validateAndParseJwtDefault,
+    getAccessTokenFromHeader: (req: any) => string = getAccessTokenFromHeaderDefault,
+    setAccessTokenInResponse: (req: any, res: any, token: string, expiresInSec: number) => void = setAccessTokenInResponseDefault,
 ): Router {
     const PASSWORD_HASH_LEN = 20
     const usePlainTextPassword = config?.password?.usePlainText || false
@@ -268,7 +290,7 @@ export function createAuthMiddleware(
     authApp.use(bodyParser.urlencoded())
     authApp.use(bodyParser.json())
     authApp.use(async (req, res, next) => {
-        let authorization: string = (req.headers['authorization'] || req.query.authorization) as string || (req.cookies && req.cookies['access_token'])
+        let authorization: string = getAccessTokenFromHeader(req)
         let user;
         if (authorization) {
             user = await getUserFromAccesstoken(req)
@@ -299,13 +321,7 @@ export function createAuthMiddleware(
                     return handleUnauthenticatedRequest(401, msg, req, res, next)
                 }
                 const accessToken = getAccessTokenFromHeader(req)
-                res.cookie('access_token', accessToken, {
-                    maxAge: config.expiresInSec * 1000,
-                    httpOnly: true,
-                    secure: false,
-                    path: '/',
-                });
-                res.setHeader('Set-Cookie', `access_token=${accessToken}; Expires=${new Date(Date.now() + config.expiresInSec * 1000).toUTCString()}; Secure; Path=/`);
+                setAccessTokenInResponse(req, res, accessToken, config.expiresInSec)
                 next()
             } else {
                 return handleUnauthenticatedRequest(401, `Missing authorization in headers`, req, res, next)
@@ -314,15 +330,6 @@ export function createAuthMiddleware(
         }
     })
 
-
-    function getAccessTokenFromHeader(req: any) {
-        let authorization: string = (req.headers['authorization'] || req.query.authorization) as string || req.cookies['access_token']
-        let [authorizationType, token] = authorization.split(" ")
-        if (!(authorizationType?.toLocaleLowerCase().trim() == 'bearer')) {
-            token = authorization
-        }
-        return token
-    }
     async function getUserFromAccesstoken(req: any) {
         let token = getAccessTokenFromHeader(req)
         return await validateAndParseJwt(token, secret).catch(e => {
@@ -457,7 +464,7 @@ export function createAuthMiddleware(
             req.body.identity = "email"
             signUpUser(req.body, req, res).then(async (user) => {
                 let token = await generateUserJwt(user!, secret, config.expiresInSec)
-                addAccessToken(res, token)
+                setAccessTokenInResponse(req, res, token, config.expiresInSec)
                 user!.access_token = token
                 delete user?.password
                 user.access_token = token
@@ -486,7 +493,7 @@ export function createAuthMiddleware(
                 }
                 if (user.password == hashPassword) {
                     let token = await generateUserJwt(user!, secret, config.expiresInSec)
-                    addAccessToken(res, token)
+                    setAccessTokenInResponse(req, res, token, config.expiresInSec)
                     delete user.password
                     user.access_token = token
                     onEvent && onEvent(AuthEvents.USER_LOGIN, user)
@@ -585,11 +592,6 @@ export function createAuthMiddleware(
     }
 
     //---------------- if sigup selected using google ----------------
-    function addAccessToken(res: Response, token: string) {
-        res.cookie('access_token', token)
-        res.header('access_token', token)
-    }
-
     if (config.google) {
         async function saveAndRedirectUser(user: AuthUser, returnUrl: string, req: any, res: any) {
             user.status = "ACTIVE"
@@ -604,7 +606,7 @@ export function createAuthMiddleware(
                 } else {
                     returnUrl = Utils.appendQueryParam(returnUrl, 'access_token', token)
                 }
-                addAccessToken(res, token)
+                setAccessTokenInResponse(req, res, token, config.expiresInSec)
                 res.redirect(returnUrl)
             }
         }
