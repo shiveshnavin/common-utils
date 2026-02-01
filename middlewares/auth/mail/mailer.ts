@@ -23,6 +23,7 @@ export type MailerConfig = {
     terms?: string;
     instagram?: string;
     cdn?: string;
+    emailTemplateHtmlFile?: string;
 }
 
 export class Mailer {
@@ -55,7 +56,7 @@ export class Mailer {
     getEmailTemplate() {
         if (this.emailTemplateHtml)
             return this.emailTemplateHtml
-        this.emailTemplateHtml = EMAIL_TEMPLATE;
+        this.emailTemplateHtml = this.config.emailTemplateHtmlFile ? fs.readFileSync(this.config.emailTemplateHtmlFile, 'utf-8') : EMAIL_TEMPLATE;
         this.emailTemplateHtml = this.emailTemplateHtml
             .replaceAll("{{email}}", this.config.email)
             .replaceAll("{{appname}}", this.config.app)
