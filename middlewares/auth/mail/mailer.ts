@@ -86,9 +86,13 @@ export class Mailer {
         };
 
         //send mail using below code
-        await this.emailTransporter.sendMail(mailOptions).catch(err => {
-            console.log('Mail send failed', err)
-        });
+        await this.emailTransporter.sendMail(mailOptions)
+            .then(info => {
+                console.log('Mail sent: ' + info.response)
+            })
+            .catch(err => {
+                console.log('Mail send failed', err)
+            });
 
     }
 

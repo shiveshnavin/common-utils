@@ -82,6 +82,7 @@ export interface AuthMethodConfig {
     expiresInSec: number,
     encryptJwtInCallbackUrl?: (req: Request, token: string) => string, // Double encrypt JWT when passed in callback urls using this key (for googlesignin)
     mailer?: Mailer,
+    verifyEmailCallbackUrl: string
     password?: {
         secret?: string
         changePasswordPath: string
@@ -178,6 +179,7 @@ export function createAuthMiddleware(
     logLevel: 0 | 1 | 2 | 3 | 4 = 0,
     config: AuthMethodConfig = {
         expiresInSec: 7200,
+        verifyEmailCallbackUrl: "/",
         password: {
             usePlainText: false,
             changePasswordPath: "/changepassword"
@@ -294,6 +296,7 @@ export function createAuthMiddleware(
     skipAuthRoutes.push('/auth/google/*')
     skipAuthRoutes.push('/auth/changepassword')
     skipAuthRoutes.push('/auth/forgotpassword')
+    skipAuthRoutes.push('/auth/verify-email')
     if (config.password) {
         skipAuthRoutes.push('/auth/signup')
     }
@@ -561,7 +564,7 @@ export function createAuthMiddleware(
         })
 
         // send verification email (initiate)
-        authApp.post('/auth/verify/email', async (req, res) => {
+        authApp.post('/auth/verify-email', async (req, res) => {
             const email = req.body.email
             let validateEmail = Utils.validateEmail(email)
             if (!validateEmail) {
@@ -570,7 +573,7 @@ export function createAuthMiddleware(
             }
             const secret = Utils.generateRandomID(20)
             const host = req.get('host') || req.hostname;
-            const link = 'http://' + host + '/auth/verify/email?secret=' + secret;
+            const link = 'http://' + host + '/auth/verify-email?secret=' + secret;
             const user: AuthUser = await db.getOne(AUTH_TABLE_USER, { email: email })
 
             if (user == undefined) {
@@ -601,15 +604,16 @@ export function createAuthMiddleware(
         })
 
         // handle verification link
-        authApp.get('/auth/verify/email', async (req, res) => {
+        authApp.get('/auth/verify-email', async (req, res) => {
             try {
                 const secretKey = (req.query.secret || req.body.secret || (req.params as any).secret) as string
                 if (!secretKey) {
-                    return res.status(400).send(ApiResponse.notOk('Missing secret'))
+                    return res.redirect(((config.verifyEmailCallbackUrl) || '/') + '?status=FAILED&message=link_expired');
                 }
                 const forgotpassword: ForgotPassword = await db.getOne(AUTH_TABLE_FORGOTPASSWORD, { secret: secretKey })
                 if (!forgotpassword) {
-                    return res.status(400).send(ApiResponse.notOk('Invalid or expired verification link'))
+                    return res.redirect(((config.verifyEmailCallbackUrl) || '/') + '?status=FAILED&message=link_expired');
+
                 }
                 const userId = forgotpassword.id
                 if (checkLinkExpiry(forgotpassword)) {
@@ -618,16 +622,14 @@ export function createAuthMiddleware(
                     onEvent && onEvent(AuthEvents.USER_UPDATED, { id: userId, action: 'verify.email.completed' })
                     await db.delete(AUTH_TABLE_FORGOTPASSWORD, { id: userId })
                     // redirect to login page if appropriate
-                    if (!res.headersSent) {
-                        return res.send(ApiResponse.ok('Email verified successfully'))
-                    }
+                    res.redirect((config?.verifyEmailCallbackUrl || '/') + '?status=SUCCESS')
                 } else {
                     await db.delete(AUTH_TABLE_FORGOTPASSWORD, { id: userId })
-                    return res.status(400).send(ApiResponse.notOk('Verification link expired'))
+                    res.redirect((config?.verifyEmailCallbackUrl || '/') + '?status=FAILED&message=link_expired')
                 }
             } catch (e: any) {
-                Utils.log(req, 'Error in /auth/verify/email ' + e.message)
-                res.status(500).send(ApiResponse.notOk(e.message))
+                Utils.log(req, 'Error in /auth/verify-email ' + e.message)
+                res.redirect((config?.verifyEmailCallbackUrl || '/') + '?status=FAILED&message=internal_error')
             }
         })
 
