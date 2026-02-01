@@ -17,6 +17,14 @@ import { Mailer } from './mail/mailer'
 import cookies from 'cookie-parser'
 import LoginPage from './login.html'
 
+// Extend express-session SessionData to include our user and access_token properties
+declare module 'express-session' {
+    interface SessionData {
+        user?: AuthUser
+        access_token?: string
+    }
+}
+
 export * from './mail/mailer'
 export * from './model'
 
@@ -58,6 +66,8 @@ export function getAccessTokenFromHeaderDefault(req: any) {
 }
 
 export function setAccessTokenInResponseDefault(req: any, res: any, token: string, expiresInSec: number) {
+    if (req.session)
+        req.session.access_token = token
     res.cookie('access_token', token, {
         maxAge: expiresInSec * 1000,
         httpOnly: true,
@@ -550,6 +560,77 @@ export function createAuthMiddleware(
             }
         })
 
+        // send verification email (initiate)
+        authApp.post('/auth/verify/email', async (req, res) => {
+            const email = req.body.email
+            let validateEmail = Utils.validateEmail(email)
+            if (!validateEmail) {
+                res.status(400).send(ApiResponse.notOk('Invalid Email'))
+                return
+            }
+            const secret = Utils.generateRandomID(20)
+            const host = req.get('host') || req.hostname;
+            const link = 'http://' + host + '/auth/verify/email?secret=' + secret;
+            const user: AuthUser = await db.getOne(AUTH_TABLE_USER, { email: email })
+
+            if (user == undefined) {
+                // don't reveal whether email exists
+                return res.send(ApiResponse.ok("If you are registered with us, a verification email will be sent."))
+            }
+            const emailObj: ForgotPassword = {
+                id: user.id,
+                email: email,
+                link: link,
+                linkExp: String(Date.now() + 10 * 60 * 1000),
+                secret
+            }
+
+            try {
+                await db.delete(AUTH_TABLE_FORGOTPASSWORD, { id: emailObj.id })
+                await db.insert(AUTH_TABLE_FORGOTPASSWORD, emailObj)
+
+                res.send(ApiResponse.ok("If you are registered with us, a verification email will be sent."))
+
+                // send verification email
+                await config.mailer?.sendVerificationMail(email, user.name, emailObj.link)
+                onEvent && onEvent(AuthEvents.USER_UPDATED, { id: user.id, action: 'verify.email.sent' })
+                Utils.log(req, 'verification mail sent to ' + email)
+            } catch (e) {
+                Utils.log(req, 'Error sending verification mail. ' + e.message)
+            }
+        })
+
+        // handle verification link
+        authApp.get('/auth/verify/email', async (req, res) => {
+            try {
+                const secretKey = (req.query.secret || req.body.secret || (req.params as any).secret) as string
+                if (!secretKey) {
+                    return res.status(400).send(ApiResponse.notOk('Missing secret'))
+                }
+                const forgotpassword: ForgotPassword = await db.getOne(AUTH_TABLE_FORGOTPASSWORD, { secret: secretKey })
+                if (!forgotpassword) {
+                    return res.status(400).send(ApiResponse.notOk('Invalid or expired verification link'))
+                }
+                const userId = forgotpassword.id
+                if (checkLinkExpiry(forgotpassword)) {
+                    // mark user as active/verified
+                    await db.update(AUTH_TABLE_USER, { id: userId }, { status: 'ACTIVE' })
+                    onEvent && onEvent(AuthEvents.USER_UPDATED, { id: userId, action: 'verify.email.completed' })
+                    await db.delete(AUTH_TABLE_FORGOTPASSWORD, { id: userId })
+                    // redirect to login page if appropriate
+                    if (!res.headersSent) {
+                        return res.send(ApiResponse.ok('Email verified successfully'))
+                    }
+                } else {
+                    await db.delete(AUTH_TABLE_FORGOTPASSWORD, { id: userId })
+                    return res.status(400).send(ApiResponse.notOk('Verification link expired'))
+                }
+            } catch (e: any) {
+                Utils.log(req, 'Error in /auth/verify/email ' + e.message)
+                res.status(500).send(ApiResponse.notOk(e.message))
+            }
+        })
+
         //change password API
         authApp.post('/auth/changepassword', async (req, res) => {
 
@@ -583,6 +664,54 @@ export function createAuthMiddleware(
 
         })
 
+        // change password for authenticated user (current password required)
+        authApp.post('/auth/updatepassword', async (req, res) => {
+            try {
+                const currentPassword = req.body.currentPassword
+                const newPasswordRaw = req.body.newPassword
+                if (!currentPassword || !newPasswordRaw) {
+                    return res.status(400).send(ApiResponse.notOk('currentPassword and newPassword are required'))
+                }
+
+                // get logged in user from session or token
+                let user: AuthUser | null = (req.session && req.session.user) ? req.session.user : null
+                if (!user) {
+                    const parsed = await getUserFromAccesstoken(req)
+                    if (parsed) {
+                        user = parsed
+                    }
+                }
+
+                if (!user) {
+                    return handleUnauthenticatedRequest(401, 'Unauthorized', req, res, () => { })
+                }
+
+                // fetch latest user from db
+                const userFromDb: AuthUser = await db.getOne(AUTH_TABLE_USER, { id: user.id })
+                if (!userFromDb) {
+                    return handleUnauthenticatedRequest(401, 'User not found', req, res, () => { })
+                }
+
+                let hashedCurrent = currentPassword
+                if (!usePlainTextPassword) {
+                    hashedCurrent = Utils.generateHash(currentPassword, PASSWORD_HASH_LEN)
+                }
+
+                if (userFromDb.password !== hashedCurrent) {
+                    return res.status(401).send(ApiResponse.notOk('Current password is incorrect'))
+                }
+
+                const newPassword = usePlainTextPassword ? newPasswordRaw : Utils.generateHash(newPasswordRaw, PASSWORD_HASH_LEN)
+
+                await db.update(AUTH_TABLE_USER, { id: user.id }, { password: newPassword })
+                onEvent && onEvent(AuthEvents.USER_UPDATED, { id: user.id })
+                res.send(ApiResponse.ok('Password updated successfully'))
+            } catch (e: any) {
+                Utils.log(req, 'Error in /auth/updatepassword ' + e.message)
+                res.status(500).send(ApiResponse.notOk('Internal Server Error'))
+            }
+        })
+
         function checkLinkExpiry(forgotpassword: ForgotPassword): boolean {
             return parseInt(forgotpassword.linkExp) >= Date.now()
 
@@ -599,14 +728,12 @@ export function createAuthMiddleware(
             let loggedInUser = await signUpUser(user, req, res) as AuthUser
             if (!res.headersSent) {
                 let token = await generateUserJwt(loggedInUser, secret, config.expiresInSec)
-
-                req.session.access_token = token
+                setAccessTokenInResponse(req, res, token, config.expiresInSec)
                 if (config.encryptJwtInCallbackUrl) {
                     returnUrl = Utils.appendQueryParam(returnUrl, 'access_token', config.encryptJwtInCallbackUrl(req, token))
                 } else {
                     returnUrl = Utils.appendQueryParam(returnUrl, 'access_token', token)
                 }
-                setAccessTokenInResponse(req, res, token, config.expiresInSec)
                 res.redirect(returnUrl)
             }
         }

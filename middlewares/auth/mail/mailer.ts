@@ -111,4 +111,16 @@ export class Mailer {
             `)
     }
 
+    async sendVerificationMail(to: string, toName?: string, link?: string) {
+
+        await this.sendTextEmail(to,
+            `Verify your ${this.config.app} account`,
+            `<p>Dear ${toName},<br>
+            Please verify your email address by clicking the link below:
+            <a href="${link}" class="button">Verify Email</a>
+            If you did not create an account with us, you can ignore this email.
+            For further assistance, please reach out to via <a href="${this.config.website}" target="_blank">our website</a></p>
+            `)
+    }
+
 }
