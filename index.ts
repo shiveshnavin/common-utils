@@ -22,6 +22,7 @@ export * from './utils/Vault'
 export * from './middlewares/auth/index'
 export * from './utils/encrypt'
 export * from './middlewares/socket/index'
+export * from './utils/RateLimiter'
 
 import FFMpegUtils from "./utils/FFMpegUtils"
 
