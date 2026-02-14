@@ -38,6 +38,7 @@
     "string-argv": "^0.3.2"
   },
   "devDependencies": {
-    "@google-cloud/logging": "^11.0.0"
+    "@google-cloud/logging": "^11.0.0",
+    "typescript": "^5.1.6"
   }
 }
