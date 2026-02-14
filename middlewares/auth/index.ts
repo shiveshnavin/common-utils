@@ -83,7 +83,7 @@ export interface AuthMethodConfig {
     expiresInSec: number,
     encryptJwtInCallbackUrl?: (req: Request, token: string) => string, // Double encrypt JWT when passed in callback urls using this key (for googlesignin)
     mailer?: Mailer,
-    verifyEmailCallbackUrl: string
+    verifyEmailCallbackUrl?: string
     password?: {
         secret?: string
         changePasswordPath: string
