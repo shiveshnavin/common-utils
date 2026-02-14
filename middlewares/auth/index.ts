@@ -18,6 +18,7 @@ import cookies from 'cookie-parser'
 import LoginPage from './login.html'
 
 // Extend express-session SessionData to include our user and access_token properties
+//@ts-ignore
 declare module 'express-session' {
     interface SessionData {
         user?: AuthUser
