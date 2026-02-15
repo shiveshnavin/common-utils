@@ -75,7 +75,10 @@ export class Mailer {
     }
 
     async sendTextEmail(to: string, title: string, body: string, cc?: string) {
-        let htmlBody = this.getEmailTemplate().join(replaceAll(body, '\n', '<br>'));
+        // If the body already contains HTML tags, don't convert newlines to <br>
+        const hasHtml = /<[^>]+>/.test(body);
+        const processedBody = hasHtml ? body : replaceAll(body, '\n', '<br>');
+        let htmlBody = this.getEmailTemplate().join(processedBody);
 
         let mailOptions = {
             from: `'${this.config.senderName}' <${this.config.email}>`,
@@ -109,9 +112,9 @@ export class Mailer {
         await this.sendTextEmail(to,
             `Reset ${this.config.app} Password link`,
             `<p>Dear ${toName},<br>
-            We received request to reset your password. Click the link below to reset it.
-            <a href="${link}" class="button">Reset Password</a>
-            If you did not request a password reset, please immediately report this email to us or contact support if you have questions.
+            We received request to reset your password. Click the link below to reset it.</p>
+            <a href="${link}" target="_blank" rel="noopener noreferrer" style="display:block; padding:10px 16px; color:#ffffff; background-color:#2563EB; text-decoration:none; border-radius:6px; font-weight:600; font-family:Arial, Helvetica, sans-serif; width:max-content; margin:12px 0;">Reset Password</a>
+            <p>If you did not request a password reset, please immediately report this email to us or contact support if you have questions.
             For further assistance, please reach out to via <a href="${this.config.website}" target="_blank">our website</a></p>
             `)
     }
