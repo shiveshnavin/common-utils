@@ -130,7 +130,7 @@ export const EMAIL_TEMPLATE = `
       </div>
       <div class="footer">
         <p>Team {{appname}}</p>
-        <p>© Copyright 2024</p>
+        <p>© Copyright 2026</p>
         <p>
           <a href="{{privacy}}">Privacy Policy</a> |
           <a href="{{terms}}">Terms & Conditions</a>
