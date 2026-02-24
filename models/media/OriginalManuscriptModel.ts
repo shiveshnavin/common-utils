@@ -219,3 +219,9 @@ export interface PosterSingleTextWithBGExtra extends Extra {
     brightColor?: string
     emphasisOnImage?: boolean
 }
+
+export interface AvatarExtra extends Extra {
+    avatar: string
+    avatarLanguage: string
+    speechVoiceName: string
+}
