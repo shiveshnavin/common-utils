@@ -63,6 +63,7 @@ export interface MediaTextPrompt {
     fromSec?: number
     toSec?: number
     durationSec?: number
+    character?: string
 }
 
 export interface Speaker {
