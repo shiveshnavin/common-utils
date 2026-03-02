@@ -4,7 +4,7 @@ import { spawn } from 'child_process';
 import { parseArgsStringToArgv } from 'string-argv';
 
 var ffmpeg;
-function execute(cmd: String, onLog?: Function, isRawCmd = false): Promise<string> {
+function execute(cmd: String, onLog?: Function, isRawCmd = false, controller?: { stop: () => void }): Promise<string> {
     if (!onLog)
         onLog = console.log
     cmd = cmd.replace('ffmpeg', "")
@@ -18,6 +18,11 @@ function execute(cmd: String, onLog?: Function, isRawCmd = false): Promise<strin
         const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path
         const ffmpeg = spawn(ffmpegPath, args);
         var output = ""
+        if (controller) {
+            controller.stop = () => {
+                ffmpeg.kill('SIGINT');
+            };
+        }
         ffmpeg.stdout.on('data', function (chunk) {
             onLog(chunk.toString());
             output = output + chunk.toString()
