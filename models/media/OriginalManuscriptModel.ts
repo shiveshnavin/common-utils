@@ -50,12 +50,19 @@ export interface Bubble {
     // either bubbleText or mediaAbsPaths should be present
     // if both are present, mediaAbsPaths will be used and bubbleText will be ignored
     bubbleText?: BubbleText // when we need to show some text as the bubble
-    mediaAbsPaths?: SectionMedia // when we need to show some media as the bubble
+    mediaAbsPath?: SectionMedia // when we need to show some media as the bubble
     bubbleExtra: BubbleExtra
-    animExtra: AnimExtra
+    // optional animation that applies to the overlay itself; this is read by
+    // BubbleMaker.makeBubble and also used by the built–in templates
+    animExtra?: AnimExtra
     fromSec?: number
     toSec?: number
     durationSec?: number
+    templateName?: string
+    audioEffectFile?: string | 'awkward-crickets' | 'beep' | 'click' | 'coin' | 'electronic-power-up-stutter' | 'epic-fail' | 'notification' | 'reload' | 'slam' | 'suspense' | 'trash' | 'woosh' // can be a local file or a stock effect inside public/assets/audio-effects/<name> (placed under D:\code\node_projects\semibit-media-render-farm\public\assets\audio-effects)
+    audioEffectVolume?: number // 0 to 1
+    audioEffectDurationSec?: number
+
 
     backgroundColor?: string = "#FFFFFF" // should support opacity too
     borderRadius?: string = 10
@@ -63,11 +70,13 @@ export interface Bubble {
 
 export interface BubbleText {
     text: string
-    fontSize?: string = 20
-    fontColor?: string = "#000000" // should support opacity too
-    fontName?: string = "Arial"
-    shadowColor?: string = "#000000" // should support opacity too
-    shadowSize?: string = 5
+    fontSize?: string | number // font size in pixels (can be number)
+    fontColor?: string // should support opacity too
+    fontName?: string
+    fontWeight?: string | number
+    shadowColor?: string // should support opacity too
+    shadowSize?: number
+    // box draw options removed; use Bubble.backgroundColor and Bubble.borderRadius instead
 }
 
 export interface MediaTextPrompt {
@@ -95,7 +104,7 @@ export interface SectionMedia {
     type: 'image' | 'video'
     dimensions?: { width: number, height: number }
     prompt?: MediaTextPrompt
-    animExtra?: Extra
+    animExtra?: AnimExtra
 }
 
 export type Plugin = {
