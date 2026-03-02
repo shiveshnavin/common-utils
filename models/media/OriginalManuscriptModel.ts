@@ -35,6 +35,7 @@ export class Transcript {
     status: boolean
 
     mediaAbsPaths: SectionMedia[]
+    bubbles: Bubble[]
     audioFullPath: string
     audioCaptionFile: string
     audioStartOffsetSec: number
@@ -43,18 +44,31 @@ export class Transcript {
     duration: number // duration in frames 
     offset: number // offset in frames
     extras: Extra
-    bubble: {
-        imageAbsPath?: string
-        text?: string
-        pointers?: string[]
-        graph?: {
-            nodes: { label: string, icon: string }[],
-            edges: { source: string, target: string, label: string }[],
-        }
-        type?: 'text' | 'slide_up' | 'graph' | 'pointers'
-    }
 }
 
+export interface Bubble {
+    // either bubbleText or mediaAbsPaths should be present
+    // if both are present, mediaAbsPaths will be used and bubbleText will be ignored
+    bubbleText?: BubbleText // when we need to show some text as the bubble
+    mediaAbsPaths?: SectionMedia // when we need to show some media as the bubble
+    bubbleExtra: BubbleExtra
+    animExtra: AnimExtra
+    fromSec?: number
+    toSec?: number
+    durationSec?: number
+
+    backgroundColor?: string = "#FFFFFF" // should support opacity too
+    borderRadius?: string = 10
+}
+
+export interface BubbleText {
+    text: string
+    fontSize?: string = 20
+    fontColor?: string = "#000000" // should support opacity too
+    fontName?: string = "Arial"
+    shadowColor?: string = "#000000" // should support opacity too
+    shadowSize?: string = 5
+}
 
 export interface MediaTextPrompt {
     prompt: string
@@ -224,4 +238,24 @@ export interface AvatarExtra extends Extra {
     avatar: string
     avatarLanguage: string
     speechVoiceName: string
+}
+
+export interface AnimExtra extends Extra {
+    template: string
+    | 'none'
+    | 'popup'
+    | "fade"
+    | "slide_left"
+    | "slide_right"
+    | "slide_up"
+    | "slide_down"
+    durationSec: number
+}
+
+export interface BubbleExtra extends Extra {
+    positionX: 'top' | 'center' | 'bottom'
+    positionY: 'top' | 'center' | 'bottom'
+    size: 'full' | 'half' // useful for images and videos
+    paddingX: number // number in percentage
+    paddingY: number // number in percentage
 }
