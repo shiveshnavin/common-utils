@@ -31,8 +31,15 @@ function execute(cmd: String, onLog?: Function, isRawCmd = false, controller?: {
             onLog(chunk.toString());
             output = output + chunk.toString()
         });
-        ffmpeg.on('exit', function () {
-            resolve(output);
+        ffmpeg.on('exit', function (code) {
+            // resolve or reject based on exit code so callers can detect failures
+            if (code === 0) {
+                resolve(output);
+            } else {
+                const msg = `ffmpeg exited with code ${code}`;
+                onLog(msg);
+                reject(msg);
+            }
             onLog('Command Completed : ' + cmd)
         })
     })
