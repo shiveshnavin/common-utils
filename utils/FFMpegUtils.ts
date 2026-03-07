@@ -4,7 +4,7 @@ import { spawn } from 'child_process';
 import { parseArgsStringToArgv } from 'string-argv';
 
 var ffmpeg;
-function execute(cmd: String, onLog?: Function, isRawCmd = false, controller?: { stop: () => void }, ffmpegPath?: string): Promise<string> {
+function execute(cmd: String, onLog?: Function, isRawCmd = false, controller?: { stop: () => void }, inputffmpegPath?: string): Promise<string> {
     if (!onLog)
         onLog = console.log
     cmd = cmd.replace('ffmpeg', "")
@@ -18,7 +18,7 @@ function execute(cmd: String, onLog?: Function, isRawCmd = false, controller?: {
         // allow a custom ffmpeg binary via environment (useful when the
         // bundled @ffmpeg-installer version is outdated).  the override may be
         // an absolute path or just "ffmpeg" to use whatever is on the PATH.
-        const ffmpegPath = ffmpegPath || process.env.FFMPEG_PATH || require('@ffmpeg-installer/ffmpeg').path;
+        const ffmpegPath = inputffmpegPath || process.env.FFMPEG_PATH || require('@ffmpeg-installer/ffmpeg').path;
         const ffmpeg = spawn(ffmpegPath, args);
         var output = ""
         if (controller) {
