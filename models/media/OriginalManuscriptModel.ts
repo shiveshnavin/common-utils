@@ -60,9 +60,14 @@ export interface Bubble {
     durationSec?: number
     templateName?: string
     audioEffectFile?: string | 'awkward-crickets' | 'beep' | 'click' | 'coin' | 'electronic-power-up-stutter' | 'epic-fail' | 'notification' | 'reload' | 'slam' | 'suspense' | 'trash' | 'woosh' // can be a local file or a stock effect inside public/assets/audio-effects/<name> (placed under D:\code\node_projects\semibit-media-render-farm\public\assets\audio-effects)
-    audioEffectVolume?: number // 0 to 1
+    audioEffectVolume?: number // 0 to 2
     audioEffectDurationSec?: number
 
+    // when true the underlying ffmpeg amix filters will include ":normalize=0"
+    // this only has an effect if the caller of BubbleMaker.makeBubble also
+    // opts in by passing the normalizeAudio flag.  normalization requires a
+    // sufficiently recent ffmpeg build that understands the parameter.
+    normalizeAudio?: boolean
 
     backgroundColor?: string = "#FFFFFF" // should support opacity too
     borderRadius?: string = 10
