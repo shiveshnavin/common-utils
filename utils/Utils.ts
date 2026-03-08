@@ -432,7 +432,13 @@ export class Utils {
       } catch (e) {
         return {};
       }
-    } else {
+    }
+    else if (process.env.CONFIG && fs.existsSync(process.env.CONFIG)) {
+      console.log(`Loading configs from ${process.env.CONFIG}`);
+      let jstr = fs.readFileSync(process.env.CONFIG).toString();
+      return JSON.parse(jstr);
+    }
+    else {
       return undefined;
     }
   }
