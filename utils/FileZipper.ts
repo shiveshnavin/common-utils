@@ -94,13 +94,52 @@ export async function UnzipFiles(filePath, targetDir) {
         if (!unzipper) {
             unzipper = require('unzipper')
         }
-        // Open the zip file and extract its contents to the targetDir
-        await fs.createReadStream(filePath)
-            .pipe(unzipper.Extract({ path: targetDir }))
-            .promise();
+        // Use entry-by-entry extraction. `unzipper.Extract()` intermittently
+        // truncates large media files on Windows for some archives.
+        const directory = await unzipper.Open.file(filePath);
+        const safeRoot = path.resolve(targetDir);
+
+        for (const entry of directory.files) {
+            const normalizedEntryPath = path.normalize(entry.path);
+            const outputPath = path.resolve(safeRoot, normalizedEntryPath);
+
+            // Prevent zip-slip path traversal.
+            if (!outputPath.startsWith(safeRoot + path.sep) && outputPath !== safeRoot) {
+                throw new Error(`Unsafe zip entry path detected: ${entry.path}`);
+            }
+
+            if (entry.type === 'Directory' || normalizedEntryPath.endsWith(path.sep)) {
+                if (!fs.existsSync(outputPath)) {
+                    fs.mkdirSync(outputPath, { recursive: true });
+                }
+                continue;
+            }
+
+            const parentDir = path.dirname(outputPath);
+            if (!fs.existsSync(parentDir)) {
+                fs.mkdirSync(parentDir, { recursive: true });
+            }
+
+            try {
+                await new Promise<void>((resolve, reject) => {
+                    entry
+                        .stream()
+                        .on('error', reject)
+                        .pipe(fs.createWriteStream(outputPath))
+                        .on('error', reject)
+                        .on('finish', () => resolve());
+                });
+            } catch (e) {
+                if (fs.existsSync(outputPath)) {
+                    try { fs.unlinkSync(outputPath); } catch (_) { }
+                }
+                throw e;
+            }
+        }
 
         console.log('Files extracted successfully.');
     } catch (error) {
         console.error('Error occurred during the unzip process:', error);
+        throw error;
     }
 }
