@@ -3,7 +3,7 @@ import express, { Express, Response, Request, Router } from 'express'
 import { MultiDbORM } from 'multi-db-orm'
 import * as bodyParser from 'body-parser'
 //@ts-ignore
-import session from 'express-session'
+import session from 'cookie-session'
 import { Utils } from '../../utils/Utils'
 import { ApiResponse, ForgotPassword } from './model'
 //@ts-ignore
@@ -285,9 +285,9 @@ export function createAuthMiddleware(
 
     if (!isSessionInitialized()) {
         app.use(sessionMiddlware || session({
-            secret: secret,
-            resave: false,
-            saveUninitialized: false
+            name: "session",
+            keys: [`cookie-secret-salt-${secret}`],
+            maxAge: config.expiresInSec * 1000,
         }));
     }
 
