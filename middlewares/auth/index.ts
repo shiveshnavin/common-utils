@@ -84,11 +84,13 @@ export interface AuthMethodConfig {
     encryptJwtInCallbackUrl?: (req: Request, token: string) => string, // Double encrypt JWT when passed in callback urls using this key (for googlesignin)
     mailer?: Mailer,
     verifyEmailCallbackUrl?: string
+    verifyMaxEmailsPerDay?: number,
     disableSignup?: boolean
     password?: {
         secret?: string
         changePasswordPath: string
         usePlainText: boolean
+        changePasswordMaxEmailsPerDay?: number
     },
     google?: {
         creds: GoogleSigninConfig,
@@ -110,6 +112,7 @@ export enum AuthEvents {
 
 export const AUTH_TABLE_USER = 'auth_users'
 export const AUTH_TABLE_FORGOTPASSWORD = "forgot_password"
+export const AUTH_TABLE_EMAIL_LOG = "auth_email_log"; // stores email send events per-user
 
 export interface AuthMiddlewareOptions {
     db: MultiDbORM,
@@ -182,9 +185,11 @@ export function createAuthMiddleware(
     config: AuthMethodConfig = {
         expiresInSec: 7200,
         verifyEmailCallbackUrl: "/",
+        verifyMaxEmailsPerDay: 3,
         password: {
             usePlainText: false,
-            changePasswordPath: "/changepassword"
+            changePasswordPath: "/changepassword",
+            changePasswordMaxEmailsPerDay: 3
         }
     },
     handleUnauthenticatedRequest: (
@@ -555,6 +560,24 @@ export function createAuthMiddleware(
                 if (user == undefined) {
                     return res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
                 }
+
+                // enforce per-user daily limit for password reset emails
+                try {
+                    const maxPerDay = config.password?.changePasswordMaxEmailsPerDay ?? 3
+                    const since = 0//;Date.now() - 24 * 60 * 60 * 1000
+                    const rows = await db.get(AUTH_TABLE_EMAIL_LOG,
+                        { userId: user.id, type: 'reset' },
+                        { sort: [{ field: 'ts', order: 'desc' } as const], limit: maxPerDay + 1 }
+                    )
+                    //.catch(() => []) as any[]
+                    const recentCount = (rows || []).filter(r => (r && r.ts ? Number(r.ts) : 0) >= since).length
+                    if (recentCount >= maxPerDay) {
+                        return res.status(429).send(ApiResponse.notOk(`We've detected suspicious activity on your account and have temporarily paused further password reset requests for today as a precaution. We apologize for the inconvenience — please try again tomorrow. If you believe this was a mistake, contact our support team.`))
+                    }
+                } catch (e) {
+                    // if logging/counting fails, proceed silently (do not block user)
+                    Utils.log(req, 'Warning: failed to check/reset email send count: ' + (e && (e as any).message || e))
+                }
                 const emailObj: ForgotPassword = {
                     id: user.id,
                     email: email,
@@ -574,6 +597,11 @@ export function createAuthMiddleware(
                     await config.mailer?.sendResetPasswordMail(email, user.name, emailObj.link)
                     onEvent && onEvent(AuthEvents.USER_FORGOT_PASSWORD, emailObj)
                     Utils.log(req, 'forgotpassword mail sent to ' + email)
+
+                    // log email sent for rate limiting
+                    try {
+                        await db.insert(AUTH_TABLE_EMAIL_LOG, { id: user.id + '-' + Utils.generateRandomID(5), userId: user.id, email: email, type: 'reset', ts: Date.now() }).catch(() => { })
+                    } catch (e) { }
                 } catch (e) {
                     Utils.log(req, 'Error is forgotpassword. ' + e.message)
                 }
@@ -606,6 +634,22 @@ export function createAuthMiddleware(
                 }
 
                 try {
+                    // enforce per-user daily limit for verification emails
+                    try {
+                        const maxPerDay = config.verifyMaxEmailsPerDay ?? 3
+                        const since = Date.now() - 24 * 60 * 60 * 1000
+                        const rows = await db.get(AUTH_TABLE_EMAIL_LOG,
+                            { userId: user.id, type: 'verify' },
+                            { sort: [{ field: 'ts', order: 'desc' } as const], limit: maxPerDay + 1 }
+                        ).catch(() => []) as any[]
+                        const recentCount = (rows || []).filter(r => (r && r.ts ? Number(r.ts) : 0) >= since).length
+                        if (recentCount >= maxPerDay) {
+                            return res.status(429).send(ApiResponse.notOk('You have reached the limit to send verification emails. Please try again tomorrow.'))
+                        }
+                    } catch (e) {
+                        Utils.log(req, 'Warning: failed to check verification email send count: ' + (e && (e as any).message || e))
+                    }
+
                     await db.delete(AUTH_TABLE_FORGOTPASSWORD, { id: emailObj.id })
                     await db.insert(AUTH_TABLE_FORGOTPASSWORD, emailObj)
 
@@ -615,6 +659,11 @@ export function createAuthMiddleware(
                     await config.mailer?.sendVerificationMail(email, user.name, emailObj.link)
                     onEvent && onEvent(AuthEvents.USER_UPDATED, { id: user.id, action: 'verify.email.sent' })
                     Utils.log(req, 'verification mail sent to ' + email)
+
+                    // log email sent for rate limiting
+                    try {
+                        await db.insert(AUTH_TABLE_EMAIL_LOG, { id: user.id + '-' + Utils.generateRandomID(5), userId: user.id, email: email, type: 'verify', ts: Date.now() }).catch(() => { })
+                    } catch (e) { }
                 } catch (e) {
                     Utils.log(req, 'Error sending verification mail. ' + e.message)
                 }

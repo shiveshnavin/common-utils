@@ -22,7 +22,7 @@ export class ChatGptApi {
         endpoint: string,
         convoId?: string,
         retries?: number,
-        axios?: Axios) {
+        axios?: typeof Axios) {
         this.endpoint = endpoint
         this.conversationId = convoId
         this.retries = retries || 0
