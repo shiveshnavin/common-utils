@@ -20,16 +20,16 @@ export class ApiResponse<T extends any> {
 
 export interface AuthUser {
     name: string,
-    avatar: string,
+    avatar?: string,
     email: string,
     phone?: string,
     password?: string,
-    id?: string,
+    id: string,
     access_token?: string,
     extrajson?: string,
-    identity?: "email" | "google",
+    identity?: "email" | "google" | string,
     created?: number,
-    status?: "ACTIVE" | "INACTIVE" | "UNVERIFIED"
+    status: "ACTIVE" | "INACTIVE" | "UNVERIFIED" | string,
 }
 
 export interface ForgotPassword {
