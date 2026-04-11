@@ -23,6 +23,7 @@ export * from './middlewares/auth/index'
 export * from './utils/encrypt'
 export * from './middlewares/socket/index'
 export * from './utils/RateLimiter'
+export * from './utils/Cache'
 
 import FFMpegUtils from "./utils/FFMpegUtils"
 
