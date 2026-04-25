@@ -594,7 +594,7 @@ export function createAuthMiddleware(
                     res.send(ApiResponse.ok("If you are registered with us , an email will be sent to reset the password "))
 
                     //send email
-                    await config.mailer?.sendResetPasswordMail(email, user.name, emailObj.link)
+                    await config.mailer?.sendResetPasswordMail(email, user.name, emailObj.link, req)
                     onEvent && onEvent(AuthEvents.USER_FORGOT_PASSWORD, emailObj)
                     Utils.log(req, 'forgotpassword mail sent to ' + email)
 
@@ -656,7 +656,7 @@ export function createAuthMiddleware(
                     res.send(ApiResponse.ok("If you are registered with us, a verification email will be sent."))
 
                     // send verification email
-                    await config.mailer?.sendVerificationMail(email, user.name, emailObj.link)
+                    await config.mailer?.sendVerificationMail(email, user.name, emailObj.link, req)
                     onEvent && onEvent(AuthEvents.USER_UPDATED, { id: user.id, action: 'verify.email.sent' })
                     Utils.log(req, 'verification mail sent to ' + email)
 

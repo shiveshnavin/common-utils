@@ -28,15 +28,15 @@ export type MailerConfig = {
 
 export class Mailer {
 
-    emailTransporter
     emailTemplateHtml: any
-    config: MailerConfig
+    private defaultTransporter: any
+    private defaultConfig: MailerConfig
     constructor(mailConfig: MailerConfig) {
         if (!nodemailer) {
             nodemailer = require('nodemailer')
         }
-        this.config = mailConfig
-        this.emailTransporter = nodemailer.createTransport({
+        this.defaultConfig = mailConfig
+        this.defaultTransporter = nodemailer.createTransport({
             host: mailConfig.host,
             port: mailConfig.port,
             // service: mailConfig.service,
@@ -53,12 +53,17 @@ export class Mailer {
         });
     }
 
+    getTransporter(config?: MailerConfig) {
+        return this.defaultTransporter;
+    }
+
     getConfig(req?: any): MailerConfig {
-        return this.config;
+        return this.defaultConfig;
     }
 
     getEmailTemplate(req?: any) {
-        if (this.emailTemplateHtml)
+        const config = this.getConfig(req);
+        if ((config == this.defaultConfig) && this.emailTemplateHtml)
             return this.emailTemplateHtml
         this.emailTemplateHtml = this.getConfig(req).emailTemplateHtmlFile ? fs.readFileSync(this.getConfig(req).emailTemplateHtmlFile, 'utf-8') : EMAIL_TEMPLATE;
         this.emailTemplateHtml = this.emailTemplateHtml
@@ -80,12 +85,13 @@ export class Mailer {
 
     async sendTextEmail(to: string, title: string, body: string, cc?: string, req?: any) {
         // If the body already contains HTML tags, don't convert newlines to <br>
+        const config = this.getConfig(req);
         const hasHtml = /<[^>]+>/.test(body);
         const processedBody = hasHtml ? body : replaceAll(body, '\n', '<br>');
         let htmlBody = this.getEmailTemplate(req).join(processedBody);
 
         let mailOptions = {
-            from: `'${this.getConfig(req).senderName}' <${this.getConfig(req).email}>`,
+            from: `'${config.senderName}' <${config.email}>`,
             to: to,
             subject: title,
             html: htmlBody,
@@ -93,7 +99,7 @@ export class Mailer {
         };
 
         //send mail using below code
-        await this.emailTransporter.sendMail(mailOptions)
+        await this.getTransporter(config).sendMail(mailOptions)
             .then(info => {
                 console.log('Mail sent: ' + info.response)
             })
