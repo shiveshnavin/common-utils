@@ -47,19 +47,22 @@ export function GoogleSigninMiddleware(
         return tokenResp
     }
 
-    function generateGoogleAuthUrl(authCallback: string, signin_callback?: string) {
+    function generateGoogleAuthUrl(authCallback: string, signin_callback?: string, req?: any) {
         let defaultScopes = [
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile"
         ]
         let scopesString = (scopes || defaultScopes).join(" ")
+        let queryParams = req.query || {}
         let authUrl = oAuth2Client.generateAuthUrl({
             access_type: "offline",
             scope: scopesString,
             include_granted_scopes: true,
             redirect_uri: authCallback,
             state: Utils.encodeBase64(JSON.stringify({
-                signin_callback
+                ...queryParams,
+                returnUrl: undefined, // dont include returnUrl in state, as it can be very long and cause issues in some providers. Instead, rely on session to store it if needed
+                signin_callback,
             }))
         });
         return authUrl
@@ -74,7 +77,7 @@ export function GoogleSigninMiddleware(
             //@ts-ignore
             req.session.signin_callback = cbUrl
         }
-        let googleAuthUrl = generateGoogleAuthUrl(callbackUrl, cbUrl as string)
+        let googleAuthUrl = generateGoogleAuthUrl(callbackUrl, cbUrl as string, req)
         res.redirect(googleAuthUrl)
     })
 
@@ -84,7 +87,10 @@ export function GoogleSigninMiddleware(
             let code = req.query.code as string
             let state = JSON.parse(Utils.decodeBase64(req.query.state as string || '') || '{}')
             const returnUrl = state.signin_callback || req.session.signin_callback || default_signin_callback
-
+            req.query = {
+                ...req.query,
+                ...state,
+            }
             let tokenresp = await exchangeGoogleCode(code)
             let idToken = tokenresp.tokens.id_token
             //@ts-ignore
