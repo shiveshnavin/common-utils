@@ -29,7 +29,7 @@ export class Transcript {
     videoText: string[]  // deprecated
     dialog: string[]
     index: number
-    transition_type: 'graphical' | 'geometrial' | 'none' // comma separated
+    transition_type: 'graphical' | 'geometrial' | 'none' | 'fade' | 'slide_left' | 'flash' // comma separated
     transition_file: string
     transition_duration_sec: number
     status: boolean
