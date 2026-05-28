@@ -50,6 +50,7 @@ export interface Bubble {
     // either bubbleText or mediaAbsPaths should be present
     // if both are present, mediaAbsPaths will be used and bubbleText will be ignored
     bubbleText?: BubbleText // when we need to show some text as the bubble
+    htmlText?: BubbleHtml
     mediaTextPrompts?: MediaTextPrompt[]
     mediaAbsPath?: SectionMedia // when we need to show some media as the bubble
     bubbleExtra: BubbleExtra
@@ -72,6 +73,11 @@ export interface Bubble {
 
     backgroundColor?: string = "#FFFFFF" // should support opacity too
     borderRadius?: string = 10
+}
+
+export interface BubbleHtml {
+    path: string // first precedence, check for html file
+    text: string // 2nd precedence
 }
 
 export interface BubbleText {
