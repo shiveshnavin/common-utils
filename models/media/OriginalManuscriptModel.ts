@@ -51,6 +51,7 @@ export interface Bubble {
     // if both are present, mediaAbsPaths will be used and bubbleText will be ignored
     bubbleText?: BubbleText // when we need to show some text as the bubble
     bubbleHtml?: BubbleHtml
+    mediaTextPrompts?: MediaTextPrompt[]
     mediaAbsPath?: SectionMedia // when we need to show some media as the bubble
     bubbleExtra: BubbleExtra
     // optional animation that applies to the overlay itself; this is read by
