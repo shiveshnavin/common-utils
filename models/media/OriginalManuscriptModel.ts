@@ -22,11 +22,11 @@ export interface OriginalManuscript {
 export class Transcript {
     title: string
     text: string
-    pointers: string[]
-    imageText: string[] // deprecated
-    imageTexts: string[] // deprecated in favor of mediaTextPrompts
-    mediaTextPrompts: MediaTextPrompt[]
-    videoText: string[]  // deprecated
+    pointers?: string[]// deprecated in favor of bubbles
+    imageText?: string[] // deprecated in favor of mediaTextPrompts
+    imageTexts?: string[] // deprecated in favor of mediaTextPrompts
+    mediaTextPrompts?: MediaTextPrompt[]
+    videoText?: string[]  // deprecated in favor of mediaTextPrompts
     dialog: string[]
     index: number
     transition_type: 'graphical' | 'geometrial' | 'none' | 'fade' | 'slide_left' | 'flash' // comma separated
@@ -34,8 +34,8 @@ export class Transcript {
     transition_duration_sec: number
     status: boolean
 
-    mediaAbsPaths: SectionMedia[]
-    bubbles: Bubble[]
+    mediaAbsPaths?: SectionMedia[]
+    bubbles?: Bubble[]
     audioFullPath: string
     audioCaptionFile: string
     audioStartOffsetSec: number
@@ -78,7 +78,7 @@ export interface Bubble {
 export interface BubbleHtml {
     text?: string // first precedence
     path?: string // 2nd precedence, check for html file
-    durationSec?: number
+    durationSec?: number // seconds for which the html will be rendered and recorded, use where the html is animated. for static frames, keep it null
 }
 
 export interface BubbleText {
