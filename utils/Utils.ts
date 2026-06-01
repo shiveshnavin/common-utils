@@ -24,6 +24,41 @@ export type Logger = { info: (log: { message: string, labels: { origin: string }
 var defaultLogger: Logger | undefined = undefined
 
 export class Utils {
+
+
+  static getCountry(req?: IRequest): string {
+    let country: string | undefined = req?.headers?.['cf-ipcountry'] as string || req?.headers?.['x-appengine-country'] as string || req?.headers?.['x-country'] as string || req?.query?.country as string || req?.body?.input?.country as string || req?.body?.country as string;
+    return (country as string)?.toLocaleLowerCase();
+  }
+
+  static getOriginalIP(req?: IRequest): string {
+    const xForwardedFor = req?.headers?.['x-forwarded-for'] as string;
+    let ip: string | undefined = req?.headers?.['cf-connecting-ip'] as string ||
+      req?.headers?.['x-appengine-user-ip'] as string ||
+      (xForwardedFor ? xForwardedFor.split(',')[0].trim() : undefined) ||
+      req?.ip;
+
+    return ip as string;
+  }
+
+  static getLanguageCode(req?: IRequest): string {
+    let lang: string | undefined = req?.headers?.['x-lang'] as string || req?.query?.lang as string || req?.body?.input?.lang as string || req?.body?.lang as string;
+    return lang as string;
+  }
+
+  static getTenantFromRequest(req?: IRequest): string {
+    let tenant: string | undefined = req?.headers?.['x-tenant'] as string || req?.session?.tenant || req?.query?.tenant as string || req?.body?.input?.tenant as string || req?.body?.tenant as string || (req as any)?.state?.tenant as string || (req as any)?.body?.clientId as string;
+
+    if (!tenant) {
+      tenant = AppUtils.getAllTenants().find(t => req?.host.includes(t))
+    }
+    if (!tenant) {
+      tenant = getDefaultBaseTenant();
+    }
+    return tenant as string;
+  }
+
+
   /**
    * Processes an array of objects in parallel with a specified level of concurrency.
    * @param {Array} items - The array of objects to process.

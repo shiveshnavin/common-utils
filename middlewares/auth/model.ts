@@ -38,4 +38,5 @@ export interface ForgotPassword {
     link: string
     linkExp: string
     secret: string
+    extras?: string
 }

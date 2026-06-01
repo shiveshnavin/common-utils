@@ -547,6 +547,8 @@ export function createAuthMiddleware(
                 }
                 const secret = Utils.generateRandomID(20)
                 const host = req.get('host') || req.hostname;
+                const ip = Utils.getOriginalIP(req)
+                const country = Utils.getCountry(req)
                 // const host = 'localhost:8081' 
                 let link
                 if (config.password?.changePasswordPath?.startsWith('http')) {
@@ -564,7 +566,7 @@ export function createAuthMiddleware(
                 // enforce per-user daily limit for password reset emails
                 try {
                     const maxPerDay = config.password?.changePasswordMaxEmailsPerDay ?? 3
-                    const since = 0//;Date.now() - 24 * 60 * 60 * 1000
+                    const since = Date.now() - 24 * 60 * 60 * 1000
                     const rows = await db.get(AUTH_TABLE_EMAIL_LOG,
                         { userId: user.id, type: 'reset' },
                         { sort: [{ field: 'ts', order: 'desc' } as const], limit: maxPerDay + 1 }
@@ -583,7 +585,11 @@ export function createAuthMiddleware(
                     email: email,
                     link: link,
                     linkExp: String(Date.now() + 10 * 60 * 1000),
-                    secret
+                    secret,
+                    extras: JSON.stringify({
+                        ip,
+                        country
+                    })
                 }
 
                 try {
