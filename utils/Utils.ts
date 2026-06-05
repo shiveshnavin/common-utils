@@ -908,8 +908,9 @@ export class Utils {
     let parts = existingUrl.split("?");
     let left = parts[0];
     let right = `?${paramName}=${paramValue}`;
-    if (parts[1]) {
-      right = right + "&" + parts[1];
+    if (parts.length > 1) {
+      let rightParts = parts.slice(1)
+      right = right + "&" + rightParts.join("?");
     }
     return left + right;
   }

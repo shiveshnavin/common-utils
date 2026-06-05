@@ -83,10 +83,13 @@ export function GoogleSigninMiddleware(
 
     router.get('/callback', async (req: any, res: any) => {
         let returnUrl = default_signin_callback
+        let state = {} as any;
+        try {
+            state = JSON.parse(Utils.decodeBase64(req.query.state as string || '') || '{}')
+        } catch (e) { }
+        returnUrl = state.signin_callback || req.session.signin_callback || default_signin_callback
         try {
             let code = req.query.code as string
-            let state = JSON.parse(Utils.decodeBase64(req.query.state as string || '') || '{}')
-            const returnUrl = state.signin_callback || req.session.signin_callback || default_signin_callback
             req.state = state
             let tokenresp = await exchangeGoogleCode(code)
             let idToken = tokenresp.tokens.id_token
