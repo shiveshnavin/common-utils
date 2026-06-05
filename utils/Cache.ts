@@ -4,10 +4,16 @@ type CacheEntry<T> = {
     ttlMs: number;
 };
 
-export class InMemoryCache {
+export interface CacheService {
+    setData<T>(key: string, value: T, ttl?: number): Promise<void>
+    getData<T>(key: string, lazy?: boolean): Promise<undefined | { data: T | undefined; refresh: boolean }>
+    deleteData(key: string): Promise<void>
+}
+
+export class InMemoryCache implements CacheService {
     private static cacheMap = new Map<string, CacheEntry<any>>();
 
-    public setData<T>(key: string, value: T, ttl = 0): void {
+    public async setData<T>(key: string, value: T, ttl = 0) {
         InMemoryCache.cacheMap.set(key, {
             value,
             cachedAt: Date.now(),
@@ -15,10 +21,10 @@ export class InMemoryCache {
         });
     }
 
-    public getData<T>(
+    public async getData<T>(
         key: string,
         lazy = false,
-    ): undefined | { data: T | undefined; refresh: boolean } {
+    ) {
         const entry = InMemoryCache.cacheMap.get(key);
         if (!entry) {
             return lazy ? { data: undefined, refresh: false } : undefined;
@@ -37,7 +43,7 @@ export class InMemoryCache {
         return { data: entry.value as T, refresh: false };
     }
 
-    public deleteData(key: string): void {
+    public async deleteData(key: string) {
         InMemoryCache.cacheMap.delete(key);
     }
 }
