@@ -25,6 +25,9 @@ function getClosestCommonRoot(files: string[]): string {
 }
 
 export function ZipFiles(filesToExport: string[], outputPath: string): Promise<number> {
+    //dedup filesToExport
+    filesToExport = [...new Set(filesToExport)];
+
     const outputDir = path.dirname(outputPath);
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
