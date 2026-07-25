@@ -12,6 +12,7 @@ export type MailerConfig = {
     secure: boolean;
     service: string;
     senderName: string;
+    senderEmail: string;
     email: string;
     password: string;
     resetlinkvalidityhrs: number;
