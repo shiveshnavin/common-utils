@@ -63,7 +63,20 @@ export async function validateAndParseJwtDefault(token: string, secret?: string)
 
 
 export function getAccessTokenFromHeaderDefault(req: any) {
-    return (req.headers['authorization']?.replace("Bearer ", "") || req.query.authorization) as string || (req.cookies && req.cookies['access_token'])
+    let authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        return (req.headers['authorization']?.replace("Bearer ", ""))
+    }
+    else if (req.query && req.query.authorization) {
+        return req.query.authorization
+    }
+    else if (req.cookies && req.cookies['access_token']) {
+        return req.cookies['access_token']
+    }
+    else if (authHeader && authHeader.startsWith('Basic ')) {
+        return authHeader
+    }
+    return null
 }
 
 export function setAccessTokenInResponseDefault(req: any, res: any, token: string, expiresInSec: number) {
@@ -312,11 +325,31 @@ export function createAuthMiddleware(
     authApp.use(async (req, res, next) => {
         let authorization: string = getAccessTokenFromHeader(req)
         let user;
-        if (authorization) {
-            user = await getUserFromAccesstoken(req)
-            if (user)
-                (req as any).session.user = user
+        if (authorization && authorization.startsWith('Basic ')) {
+            let base64Credentials = authorization.split(' ')[1];
+            let credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+            let [email, password] = credentials.split(':');
+            if (email && password) {
+                user = await getUser(email, undefined)
+                let hashPassword = Utils.generateHash(password, PASSWORD_HASH_LEN)
+                if (usePlainTextPassword) {
+                    hashPassword = password
+                }
+                if (user.password == hashPassword) {
+                    let token = await generateUserJwt(user!, secret, config.expiresInSec)
+                    setAccessTokenInResponse(req, res, token, config.expiresInSec)
+                    delete user.password
+                    user.access_token = token
+                } else {
+                    user = undefined
+                }
+            }
         }
+        else if (authorization) {
+            user = await getUserFromAccesstoken(req)
+        }
+        if (user)
+            (req as any).session.user = user
         if (skipAuthRoutes?.some((route) => {
             return route.includes("*") ?
                 req.path.match(route) :
