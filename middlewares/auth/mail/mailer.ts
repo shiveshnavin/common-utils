@@ -13,6 +13,7 @@ export type MailerConfig = {
     service: string;
     senderName: string;
     senderEmail: string;
+    replyToEmail?: string;
     email: string;
     password: string;
     resetlinkvalidityhrs: number;
@@ -91,12 +92,14 @@ export class Mailer {
         const processedBody = hasHtml ? body : replaceAll(body, '\n', '<br>');
         let htmlBody = this.getEmailTemplate(req).join(processedBody);
 
+        const replyTo = config.replyToEmail || config.senderEmail || config.email;
         let mailOptions = {
-            from: `'${config.senderName}' <${config.email}>`,
+            from: `'${config.senderName}' <${config.senderEmail || config.email}>`,
             to: to,
             subject: title,
             html: htmlBody,
-            cc: cc
+            cc: cc,
+            replyTo: replyTo
         };
 
         //send mail using below code
