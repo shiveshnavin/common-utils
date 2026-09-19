@@ -49,7 +49,7 @@ export class Transcript {
 export interface Bubble {
     // either bubbleText or mediaAbsPaths should be present
     // if both are present, mediaAbsPaths will be used and bubbleText will be ignored
-    bubbleText?: BubbleText // when we need to show some text as the bubble
+    bubbleText?: BubbleText | BubbleText[] // when we need to show some text as the bubble
     bubbleHtml?: BubbleHtml
     mediaTextPrompts?: MediaTextPrompt[] // dont use this field, for some reason its here, but it should not be an array or not even exists.
     mediaAbsPath?: SectionMedia // when we need to show some media as the bubble
