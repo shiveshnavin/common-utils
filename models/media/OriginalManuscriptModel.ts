@@ -237,6 +237,7 @@ export interface Extra extends any {
     | "page"  //(paperdrive)
     | "poster-single-text-with-bg" //(poster single text with bg)
     | "tweet" //(tweet)
+    | "picinpic" //(picture in picture)
 }
 
 export interface IGReelExtra extends Extra {
