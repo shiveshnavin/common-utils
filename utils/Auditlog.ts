@@ -1,15 +1,16 @@
 let Logging: any
 import fs from 'fs'
+import path from 'path'
 import { PerformanceRecorder } from "./PerformanceRecorder"
-
+import { Vault } from "./Vault"
 import { Utils } from "./Utils"
 export class Auditlog {
     private appname
     private logging
     private credsjson
-    constructor(appname: string, credsfile: any) {
+    constructor(appname: string, credsjson: any) {
         this.appname = appname
-        this.credsjson = JSON.parse(fs.readFileSync(credsfile).toString());
+        this.credsjson = credsjson
     }
 
     async init() {
@@ -19,7 +20,7 @@ export class Auditlog {
         }
         this.logging = new Logging({
             projectId: this.credsjson.project_id,
-            keyFilename: this.credsjson
+            credentials: this.credsjson
         });
         return this;
     }
@@ -33,11 +34,10 @@ export class Auditlog {
     public static async get(appname?: string): Promise<Auditlog> {
         let configJson: string
         let credsFile = 'audit_log_creds.json'
-
         if (fs.existsSync('config.json')) {
             configJson = fs.readFileSync('config.json').toString()
             let config = JSON.parse(configJson)
-            credsFile = config?.audit_log_creds;
+            credsFile = config?.audit_log_creds || credsFile;
             if (!appname && config.appname) {
                 appname = config.appname
             }
@@ -45,10 +45,13 @@ export class Auditlog {
         if (!appname) {
             throw new Error('must provide `appname` either in config.json or as param to get()')
         }
-        if (!fs.existsSync(credsFile)) {
-            throw new Error('Must provide audit_log_creds in config.json or create a file `audit_log_creds.json` in root dir')
+        const vault = Vault.get()
+        const credsPath = path.relative(vault.basePath, credsFile)
+        const credsjson = vault.readCredSyncJson(credsPath)
+        if (!credsjson) {
+            throw new Error('Must provide audit_log_creds in config.json or create a file `audit_log_creds.json` in common-creds')
         }
-        let logger = new Auditlog(appname, credsFile)
+        let logger = new Auditlog(appname, credsjson)
         await logger.init()
         return logger
     }
