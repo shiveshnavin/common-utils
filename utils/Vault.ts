@@ -1,12 +1,21 @@
 import path from "path"
 import { Utils } from "./Utils"
 import fs from "fs"
+import { createDecipheriv, createHash, pbkdf2Sync } from "crypto"
+import dotenv from "dotenv"
+dotenv.config()
+
+const OPENSSL_MAGIC = Buffer.from("Salted__")
+const LEGACY_MAGIC = Buffer.from("__COMMON_CREDS_ENCRYPTED_V1__\n")
+const PBKDF2_ITERATIONS = 100000
 
 export class Vault {
 
     basePath: string
-    constructor(basePath?: string) {
+    credsKey: string
+    constructor(basePath?: string, credsKey?: string) {
         this.basePath = basePath ?? 'common-creds'
+        this.credsKey = credsKey ?? process.env.COMMON_CREDS_KEY
     }
     /**
      * Deprecated
@@ -36,7 +45,7 @@ export class Vault {
         if (!Utils.existsFileSync(credPath)) {
             return undefined
         }
-        return Utils.readFileToString(credPath)
+        return this.readCredentialContents(credPath)
     }
 
     readCredSyncJson<T>(relativePath: string): Record<any, any> | T | any | undefined {
@@ -44,7 +53,57 @@ export class Vault {
         if (!Utils.existsFileSync(credPath)) {
             return undefined
         }
-        return Utils.readFileToObject(credPath)
+        return JSON.parse(this.readCredentialContents(credPath))
+    }
+
+    private readCredentialContents(credPath: string): string {
+        const content = fs.readFileSync(credPath)
+        const key = this.credsKey ?? process.env.COMMON_CREDS_KEY
+
+        if (content.subarray(0, OPENSSL_MAGIC.length).equals(OPENSSL_MAGIC)) {
+            if (!key) {
+                throw new Error("COMMON_CREDS_KEY is required to read encrypted credentials.")
+            }
+            if (content.length < 16) {
+                throw new Error(`Encrypted credential file is malformed: ${credPath}`)
+            }
+
+            const salt = content.subarray(8, 16)
+            const ciphertext = content.subarray(16)
+            const derived = pbkdf2Sync(key, salt, PBKDF2_ITERATIONS, 48, "sha256")
+            const decipher = createDecipheriv(
+                "aes-256-cbc",
+                derived.subarray(0, 32),
+                derived.subarray(32, 48)
+            )
+            return Buffer.concat([
+                decipher.update(ciphertext),
+                decipher.final()
+            ]).toString("utf8")
+        }
+
+        if (content.subarray(0, LEGACY_MAGIC.length).equals(LEGACY_MAGIC)) {
+            if (!key) {
+                throw new Error("COMMON_CREDS_KEY is required to read encrypted credentials.")
+            }
+            if (content.length < LEGACY_MAGIC.length + 28) {
+                throw new Error(`Encrypted credential file is malformed: ${credPath}`)
+            }
+
+            const derivedKey = createHash("sha256").update(key).digest()
+            const ivStart = LEGACY_MAGIC.length
+            const iv = content.subarray(ivStart, ivStart + 12)
+            const authTag = content.subarray(ivStart + 12, ivStart + 28)
+            const ciphertext = content.subarray(ivStart + 28)
+            const decipher = createDecipheriv("aes-256-gcm", derivedKey, iv)
+            decipher.setAuthTag(authTag)
+            return Buffer.concat([
+                decipher.update(ciphertext),
+                decipher.final()
+            ]).toString("utf8")
+        }
+
+        return content.toString("utf8")
     }
 
 

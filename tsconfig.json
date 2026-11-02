@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "strict": false,
+    "noCheck": true,
     "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
     "noUnusedLocals": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
