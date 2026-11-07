@@ -4,6 +4,22 @@ import path from 'path'
 import { PerformanceRecorder } from "./PerformanceRecorder"
 import { Vault } from "./Vault"
 import { Utils } from "./Utils"
+
+function createConsoleLogging() {
+    return {
+        log(logname: string) {
+            return {
+                entry(metadata: any, data: any) {
+                    return { logname, metadata, data }
+                },
+                write(entry: any) {
+                    console.log('Audit log:', entry)
+                }
+            }
+        }
+    }
+}
+
 export class Auditlog {
     private appname
     private logging
@@ -15,8 +31,21 @@ export class Auditlog {
 
     async init() {
         if (!Logging) {
-            //@ts-ignore
-            Logging = (await import("@google-cloud/logging")).Logging;
+            try {
+                //@ts-ignore
+                Logging = (await import("@google-cloud/logging")).Logging;
+            } catch (error) {
+                const isMissingLoggingPackage = error instanceof Error
+                    && 'code' in error
+                    && (error.code === 'MODULE_NOT_FOUND' || error.code === 'ERR_MODULE_NOT_FOUND')
+                    && error.message.includes('@google-cloud/logging')
+                if (!isMissingLoggingPackage) {
+                    throw error
+                }
+                console.log('@google-cloud/logging is not installed; using console logging.')
+                this.logging = createConsoleLogging()
+                return this
+            }
         }
         this.logging = new Logging({
             projectId: this.credsjson.project_id,
